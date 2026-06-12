@@ -95,14 +95,9 @@ header{position:fixed;top:0;left:0;right:0;z-index:200;padding:14px 22px;display
 #hint.gone{opacity:0}
 .hm{font-family:'DM Serif Display',serif;font-size:13px;margin-bottom:3px}
 .hs{font-size:10px;color:var(--muted)}
-/* Live data indicator */
-#data-status{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:201;
-  font-size:9px;color:var(--muted);letter-spacing:.06em;pointer-events:none;opacity:0;transition:opacity .5s}
-#data-status.show{opacity:1}
 </style>
 </head>
 <body>
-
 <header>
   <div>
     <div class="logo">Wake Up <span>Map</span></div>
@@ -116,8 +111,6 @@ header{position:fixed;top:0;left:0;right:0;z-index:200;padding:14px 22px;display
     </div>
   </div>
 </header>
-
-<div id="data-status"></div>
 
 <div id="ranking">
   <div class="rank-title">Most searched right now</div>
@@ -314,7 +307,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:200;padding:14px 22px;display
 
 <div id="bottom">
   <div id="match-bar">
-    <span class="live-badge" id="live-badge">Live</span>
+    <span class="live-badge">Live</span>
     <div class="match-teams">
       <div class="mt"><span class="mflag" id="mb-hflag">🇧🇷</span><span class="mname" id="mb-hname">Brazil</span></div>
       <span class="mscore" id="mb-score">— : —</span>
@@ -676,17 +669,127 @@ const DATA = {
   newzealand:{flag:"🇳🇿",name:"New Zealand",region:"Oceania",debut:false,hook:"New Zealand was one of the last places on Earth to be inhabited by humans — the Māori arrived around the 13th century, only 700 years ago. In historical terms, it is one of the world's newest nations in terms of human presence.",loc:"South Pacific, over 2,000 km from Australia",pop:"~5 million",lang:"English, Māori and sign language (3 official)",copa:"2026 World Cup.",extra:"New Zealand was the first country in the world to give women the right to vote, in 1893 — decades before most Western countries.",interest:62}
 };
 
-// ─── LIVE DATA FROM API ───────────────────────────────────────
-// Fetches /api/index every 60s and updates match + trends
-// Falls back to simulation if API unavailable
+// ─── GOOGLE TRENDS — browser-side via public proxy ────────────
+// Called directly from the user's browser to avoid server blocks
 
-async function fetchLiveData() {
+const TRENDS_KEYWORDS = {
+  brazil:'Brazil World Cup 2026',
+  morocco:'Morocco World Cup 2026',
+  france:'France World Cup 2026',
+  germany:'Germany World Cup 2026',
+  spain:'Spain World Cup 2026',
+  england:'England World Cup 2026',
+  argentina:'Argentina World Cup 2026',
+  usa:'USA World Cup 2026',
+  japan:'Japan World Cup 2026',
+  southkorea:'South Korea World Cup 2026',
+  portugal:'Portugal World Cup 2026',
+  netherlands:'Netherlands World Cup 2026',
+  mexico:'Mexico World Cup 2026',
+  colombia:'Colombia World Cup 2026',
+  turkey:'Turkey World Cup 2026',
+  australia:'Australia World Cup 2026',
+};
+
+let usingRealData = false;
+let realAwayShare = 0.5;
+let realHomeShare = 0.5;
+
+async function fetchTrendsBrowser(home, away) {
   try {
-    const res = await fetch('/api/index');
+    // Use corsproxy to bypass CORS
+    const keywords = [];
+    const kwMap = {};
+    [home, away, 'france', 'germany', 'spain'].forEach(id => {
+      if (TRENDS_KEYWORDS[id]) {
+        keywords.push(TRENDS_KEYWORDS[id]);
+        kwMap[TRENDS_KEYWORDS[id]] = id;
+      }
+    });
+    if (!keywords.length) return;
+
+    const kw = keywords.slice(0,5).map(k => encodeURIComponent(k)).join('%2C');
+    const trendsUrl = `https://trends.google.com/trends/api/widgetdata/multiline?hl=en-US&tz=-60&req=%7B%22time%22%3A%22now+1-H%22%2C%22resolution%22%3A%22EIGHT_MINUTE%22%2C%22locale%22%3A%22en-US%22%2C%22comparisonItem%22%3A%5B${keywords.slice(0,5).map((k,i) => `%7B%22geo%22%3A%7B%7D%2C%22complexKeywordsRestriction%22%3A%7B%22keyword%22%3A%5B%7B%22type%22%3A%22BROAD%22%2C%22value%22%3A%22${encodeURIComponent(k)}%22%7D%5D%7D%7D`).join('%2C')}%5D%2C%22requestOptions%22%3A%7B%22property%22%3A%22%22%2C%22backend%22%3A%22IZG%22%2C%22category%22%3A0%7D%7D&token=APP6_UEAAAAAZ...`;
+
+    // Use a different approach: Google Trends RSS which is more accessible
+    const homeKw = encodeURIComponent((TRENDS_KEYWORDS[home]||home).replace(' World Cup 2026',''));
+    const awayKw = encodeURIComponent((TRENDS_KEYWORDS[away]||away).replace(' World Cup 2026',''));
+    
+    // Fetch via allorigins proxy
+    const proxyBase = 'https://api.allorigins.win/get?url=';
+    const googleUrl = `https://trends.google.com/trends/api/explore?hl=en-US&tz=-60&req={"comparisonItem":[{"keyword":"${TRENDS_KEYWORDS[home]||home}","geo":"","time":"now 1-H"},{"keyword":"${TRENDS_KEYWORDS[away]||away}","geo":"","time":"now 1-H"}],"category":0,"property":""}`;
+    
+    const proxyUrl = proxyBase + encodeURIComponent(googleUrl);
+    const resp = await fetch(proxyUrl, {signal: AbortSignal.timeout(8000)});
+    if (!resp.ok) return;
+    const json = await resp.json();
+    const text = json.contents;
+    
+    // Extract token and widgets from Google Trends explore response
+    // Remove the leading )]}' 
+    const cleaned = text.replace(/^\)\]\}',
+/, '');
+    const data = JSON.parse(cleaned);
+    const widgets = data.widgets || [];
+    
+    // Find the time series widget
+    const tsWidget = widgets.find(w => w.id === 'TIMESERIES');
+    if (!tsWidget) return;
+    
+    const token = tsWidget.token;
+    const req = JSON.stringify(tsWidget.request);
+    
+    // Now fetch the actual data
+    const dataUrl = `https://trends.google.com/trends/api/widgetdata/multiline?hl=en-US&tz=-60&req=${encodeURIComponent(req)}&token=${encodeURIComponent(token)}&geo=`;
+    const dataProxyUrl = proxyBase + encodeURIComponent(dataUrl);
+    
+    const dataResp = await fetch(dataProxyUrl, {signal: AbortSignal.timeout(8000)});
+    if (!dataResp.ok) return;
+    const dataJson = await dataResp.json();
+    const dataText = dataJson.contents.replace(/^\)\]\}',
+/, '');
+    const trendsData = JSON.parse(dataText);
+    
+    // Extract latest values
+    const lines = trendsData?.default?.timelineData || [];
+    if (!lines.length) return;
+    
+    const latest = lines[lines.length - 1];
+    const values = latest.value || [];
+    const ids = [home, away, 'france', 'germany', 'spain'].slice(0, values.length);
+    
+    let changed = false;
+    ids.forEach((id, i) => {
+      if (typeof values[i] === 'number') {
+        interestMap[id] = values[i];
+        changed = true;
+      }
+    });
+    
+    if (changed && values.length >= 2) {
+      const hv = values[0] || 0;
+      const av = values[1] || 0;
+      const tot = hv + av + 0.01;
+      realHomeShare = hv / tot;
+      realAwayShare = av / tot;
+      usingRealData = true;
+      updateInsight();
+      updateRanking();
+      console.log('✅ Google Trends loaded:', ids.map((id,i) => id+':'+values[i]).join(', '));
+    }
+  } catch(e) {
+    console.log('Trends browser fetch failed:', e.message);
+    // silently use simulation
+  }
+}
+
+// ─── FOOTBALL DATA API ────────────────────────────────────────
+async function fetchMatch() {
+  try {
+    const res = await fetch('/api/index', {signal: AbortSignal.timeout(8000)});
     if (!res.ok) return;
     const d = await res.json();
 
-    // Update match bar
     if (d.match && !d.match.error) {
       MATCH.home = d.match.home || MATCH.home;
       MATCH.away = d.match.away || MATCH.away;
@@ -703,51 +806,36 @@ async function fetchLiveData() {
       document.getElementById('mb-aflag').textContent = MATCH.awayFlag;
       document.getElementById('mb-aname').textContent = MATCH.awayName;
       document.getElementById('mb-score').textContent = MATCH.score;
-      document.getElementById('mb-minute').textContent = MATCH.minute ? MATCH.minute + "'" : '';
+      document.getElementById('mb-minute').textContent =
+        (MATCH.status === 'IN_PLAY' || MATCH.status === 'PAUSED') && MATCH.minute
+          ? MATCH.minute + "'" : '';
 
-      // Sync clock to real match minute
-      if (MATCH.minute > 0) {
+      if (MATCH.minute > 0 && MATCH.status === 'IN_PLAY') {
         clockStart = Date.now() - MATCH.minute * 60 * 1000;
       }
-    }
 
-    // Update trends — real Google Trends data
-    if (d.trends && Object.keys(d.trends).length > 0 && !d.trends._error) {
-      // Merge real trends into interestMap
-      Object.entries(d.trends).forEach(([id, val]) => {
-        if (typeof val === 'number') {
-          interestMap[id] = val;
-        }
-      });
-
-      // Recalculate home/away share from real data
-      const homeVal = d.trends[MATCH.home] || 0;
-      const awayVal = d.trends[MATCH.away] || 0;
-      const total = homeVal + awayVal + 0.01;
-      realAwayShare = awayVal / total;
-      realHomeShare = homeVal / total;
-      usingRealData = true;
-
-      updateInsight();
-      updateRanking();
+      document.getElementById('mb-ctx').textContent =
+        MATCH.status === 'IN_PLAY' ? 'Live match — global searches spiking' :
+        MATCH.status === 'FINISHED' ? 'Match finished' :
+        MATCH.status === 'PAUSED' ? 'Half time' : 'Next match loading...';
     }
   } catch(e) {
-    // silently fall back to simulation
+    // silently keep last known state
   }
 }
 
-let realAwayShare = 0.5;
-let realHomeShare = 0.5;
-let usingRealData = false;
+async function fetchLiveData() {
+  await fetchMatch();
+  await fetchTrendsBrowser(MATCH.home, MATCH.away);
+}
 
 
 // ─── SVG VIEWBOX ZOOM/PAN ─────────────────────────────────────
-const SVG_W = 1000, SVG_H = 500;
-const svg = document.getElementById('world-map');
-let vx=0, vy=0, vw=SVG_W, vh=SVG_H;
-const MAX_ZOOM = 8;
-
-function setViewBox(x,y,w,h) {
+const SVG_W=1000,SVG_H=500;
+const svg=document.getElementById('world-map');
+let vx=0,vy=0,vw=SVG_W,vh=SVG_H;
+const MAX_ZOOM=8;
+function setViewBox(x,y,w,h){
   w=Math.max(SVG_W/MAX_ZOOM,Math.min(SVG_W,w));
   h=w*SVG_H/SVG_W;
   x=Math.max(0,Math.min(SVG_W-w,x));
@@ -758,7 +846,6 @@ function setViewBox(x,y,w,h) {
 function currentZoom(){return SVG_W/vw;}
 svg.setAttribute('viewBox',`0 0 ${SVG_W} ${SVG_H}`);
 svg.setAttribute('preserveAspectRatio','xMidYMid meet');
-
 const mapWrap=document.getElementById('map-wrap');
 mapWrap.addEventListener('wheel',e=>{
   e.preventDefault();
@@ -771,7 +858,6 @@ mapWrap.addEventListener('wheel',e=>{
   const newH=newW*SVG_H/SVG_W;
   setViewBox(mx-(e.clientX-rect.left)/rect.width*newW,my-(e.clientY-rect.top)/rect.height*newH,newW,newH);
 },{passive:false});
-
 let dragging=false,dragSvgX=0,dragSvgY=0,dragMovedPx=0,dragCX=0,dragCY=0;
 mapWrap.addEventListener('mousedown',e=>{
   if(e.button!==0)return;
@@ -791,19 +877,11 @@ window.addEventListener('mousemove',e=>{
 });
 window.addEventListener('mouseup',()=>{dragging=false;mapWrap.classList.remove('dragging');});
 
-// ─── CITY-BASED SPAWN ─────────────────────────────────────────
-function gaussian(){
-  let u=0,v=0;
-  while(u===0)u=Math.random();
-  while(v===0)v=Math.random();
-  return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
-}
+// ─── CITY SPAWN ───────────────────────────────────────────────
+function gaussian(){let u=0,v=0;while(u===0)u=Math.random();while(v===0)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
 function spawnPointForCountry(id){
   const c=CITIES[id];
-  if(!c||!c.length){
-    const ct=CENTROIDS[id];
-    return ct?[ct[0]+(Math.random()-.5)*4,ct[1]+(Math.random()-.5)*3]:null;
-  }
+  if(!c||!c.length){const ct=CENTROIDS[id];return ct?[ct[0]+(Math.random()-.5)*4,ct[1]+(Math.random()-.5)*3]:null;}
   const tw=c.reduce((s,x)=>s+x[2],0);
   let r=Math.random()*tw,city=c[0];
   for(const x of c){r-=x[2];if(r<=0){city=x;break;}}
@@ -824,22 +902,15 @@ function setMode(m){
 window.setMode=setMode;
 
 // ─── MATCH STATE ──────────────────────────────────────────────
-let MATCH={
-  home:'brazil',away:'morocco',
-  homeName:'Brazil',awayName:'Morocco',
-  homeFlag:'🇧🇷',awayFlag:'🇲🇦',
-  score:'— : —',minute:0,status:'TIMED'
-};
+let MATCH={home:'brazil',away:'morocco',homeName:'Brazil',awayName:'Morocco',homeFlag:'🇧🇷',awayFlag:'🇲🇦',score:'— : —',minute:0,status:'TIMED'};
 
 // ─── PARTICLES ────────────────────────────────────────────────
 const particles=[];
 function spawnParticle(svgX,svgY,color){
   const el=document.createElementNS('http://www.w3.org/2000/svg','circle');
-  el.setAttribute('cx',svgX.toFixed(1));
-  el.setAttribute('cy',svgY.toFixed(1));
+  el.setAttribute('cx',svgX.toFixed(1));el.setAttribute('cy',svgY.toFixed(1));
   el.setAttribute('r',(1.2+Math.random()*1.4).toFixed(2));
-  el.setAttribute('fill',color);
-  el.setAttribute('opacity','0');
+  el.setAttribute('fill',color);el.setAttribute('opacity','0');
   partLayer.appendChild(el);
   particles.push({el,age:0,fadeIn:90,hold:240+Math.random()*240,fadeOut:300});
 }
@@ -859,20 +930,14 @@ const heatPoints=[];
 function addHeat(svgX,svgY,color){
   if(heatPoints.length>=250){heatPoints.shift().el.remove();}
   const el=document.createElementNS('http://www.w3.org/2000/svg','circle');
-  el.setAttribute('cx',svgX.toFixed(1));
-  el.setAttribute('cy',svgY.toFixed(1));
+  el.setAttribute('cx',svgX.toFixed(1));el.setAttribute('cy',svgY.toFixed(1));
   el.setAttribute('r',(5+Math.random()*5).toFixed(1));
-  el.setAttribute('fill',color);
-  el.setAttribute('opacity','0');
+  el.setAttribute('fill',color);el.setAttribute('opacity','0');
   el.setAttribute('filter','url(#heat-blur)');
   heatLayer.appendChild(el);
   heatPoints.push({el,age:0,targetOp:0.025+Math.random()*0.02});
 }
-function tickHeat(){
-  for(const p of heatPoints){
-    if(p.age<300){p.age++;p.el.setAttribute('opacity',(p.targetOp*p.age/300).toFixed(4));}
-  }
-}
+function tickHeat(){for(const p of heatPoints){if(p.age<300){p.age++;p.el.setAttribute('opacity',(p.targetOp*p.age/300).toFixed(4));}}}
 
 // ─── GLOW ─────────────────────────────────────────────────────
 let glowId=null;
@@ -882,9 +947,7 @@ function setGlow(id){
   glowId=id;if(!id)return;
   const el=document.getElementById('path-'+id);if(!el)return;
   const col=COLORS[id]||'#fff';
-  el.style.stroke=col;
-  el.style.filter=`drop-shadow(0 0 3px ${col})`;
-  el.style.strokeWidth='0.9';
+  el.style.stroke=col;el.style.filter=`drop-shadow(0 0 3px ${col})`;el.style.strokeWidth='0.9';
 }
 
 // ─── CLOCK ────────────────────────────────────────────────────
@@ -897,19 +960,9 @@ function updateClock(){
 
 // ─── RANKING ──────────────────────────────────────────────────
 const interestMap={morocco:0,brazil:0,france:30,germany:20,usa:18,spain:16,england:22,argentina:25,japan:10,portugal:8};
-const NAMES={
-  morocco:'Morocco',brazil:'Brazil',france:'France',germany:'Germany',
-  usa:'USA',spain:'Spain',england:'England',argentina:'Argentina',
-  japan:'Japan',portugal:'Portugal',southkorea:'South Korea',
-  netherlands:'Netherlands',italy:'Italy',mexico:'Mexico',
-  colombia:'Colombia',canada:'Canada',australia:'Australia',
-  senegal:'Senegal',ghana:'Ghana',ivory:'Ivory Coast',
-  southafrica:'South Africa',algeria:'Algeria',egypt:'Egypt',
-  uruguay:'Uruguay',ecuador:'Ecuador',chile:'Chile',
-  turkey:'Turkey',iran:'Iran',saudi:'Saudi Arabia',qatar:'Qatar',
-};
+const NAMES={morocco:'Morocco',brazil:'Brazil',france:'France',germany:'Germany',usa:'USA',spain:'Spain',england:'England',argentina:'Argentina',japan:'Japan',portugal:'Portugal',southkorea:'South Korea',netherlands:'Netherlands',mexico:'Mexico',colombia:'Colombia',turkey:'Turkey',australia:'Australia',senegal:'Senegal',ghana:'Ghana',ivory:'Ivory Coast',southafrica:'S. Africa',algeria:'Algeria',egypt:'Egypt',uruguay:'Uruguay',ecuador:'Ecuador',czechia:'Czechia',czech:'Czech Rep.'};
 function updateRanking(){
-  const entries=Object.entries(interestMap).sort((a,b)=>b[1]-a[1]);
+  const entries=Object.entries(interestMap).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
   const top5=entries.slice(0,5),rest=entries.slice(5).reduce((s,[,v])=>s+v,0);
   const total=entries.reduce((s,[,v])=>s+v,.01);
   const container=document.getElementById('rank-rows');container.innerHTML='';
@@ -928,24 +981,23 @@ function updateRanking(){
 }
 
 // ─── INSIGHT ──────────────────────────────────────────────────
-const itotals={brazil:0,morocco:0};
+const itotals={};
 function updateInsight(){
   let awayShare,homeShare;
-  if(usingRealData){
-    awayShare=realAwayShare;
-    homeShare=realHomeShare;
-  } else {
-    const th=itotals[MATCH.home]||0,ta=itotals[MATCH.away]||0,total=th+ta+.01;
-    awayShare=ta/total; homeShare=th/total;
+  if(usingRealData){awayShare=realAwayShare;homeShare=realHomeShare;}
+  else{
+    const th=itotals[MATCH.home]||0,ta=itotals[MATCH.away]||0,tot=th+ta+.01;
+    awayShare=ta/tot;homeShare=th/tot;
   }
   const pct=Math.round(awayShare*100);
   let txt;
-  if(pct>65) txt=`${pct}% of today's searches are about ${MATCH.awayName}`;
-  else if(pct<35) txt=`${100-pct}% of searches right now are about ${MATCH.homeName}`;
+  if(pct>65)txt=`${pct}% of today's searches are about ${MATCH.awayName}`;
+  else if(pct<35)txt=`${100-pct}% of searches right now are about ${MATCH.homeName}`;
   else txt=`Balanced: ${MATCH.homeName} and ${MATCH.awayName} share global interest`;
   document.getElementById('insight-text').textContent=txt;
   const chips=document.getElementById('chips');chips.innerHTML='';
   [[MATCH.home,MATCH.homeName,COLORS[MATCH.home]],[MATCH.away,MATCH.awayName,COLORS[MATCH.away]]].forEach(([id,name,col])=>{
+    if(!col)return;
     const c=document.createElement('span');c.className='chip';
     c.style.borderColor=col;c.style.color=col;c.textContent=name;chips.appendChild(c);
   });
@@ -981,65 +1033,49 @@ function drawChart(){
   line(ha,COLORS[MATCH.away]||'#c1272d');
 }
 
-// ─── SIMULATION (fallback when no real data) ──────────────────
+// ─── SIMULATION ───────────────────────────────────────────────
 let tick=0,awayBurst=0;
 const searchers=['brazil','france','spain','england','germany','usa','canada','portugal','netherlands','argentina','mexico','japan','colombia'];
 function simulate(){
   tick++;
   awayBurst=Math.max(0,awayBurst-.004);
   if(Math.random()<.01)awayBurst=.5+Math.random()*.5;
-
-  // Use real data shares if available, otherwise simulate
   let awayShare,homeShare;
-  if(usingRealData){
-    // Small oscillation around real value for visual interest
-    awayShare=realAwayShare+(Math.random()-.5)*.05;
-    homeShare=1-awayShare;
-  } else {
-    awayShare=.38+awayBurst*.5;
-    homeShare=1-awayShare;
-  }
-
+  if(usingRealData){awayShare=Math.max(0.05,Math.min(0.95,realAwayShare+(Math.random()-.5)*.04));homeShare=1-awayShare;}
+  else{awayShare=.38+awayBurst*.5;homeShare=1-awayShare;}
   if(!itotals[MATCH.home])itotals[MATCH.home]=0;
   if(!itotals[MATCH.away])itotals[MATCH.away]=0;
-  itotals[MATCH.home]+=homeShare*2;
-  itotals[MATCH.away]+=awayShare*5;
-
+  itotals[MATCH.home]+=homeShare*2;itotals[MATCH.away]+=awayShare*5;
   if(!usingRealData){
     interestMap[MATCH.away]=(itotals[MATCH.away]/(itotals[MATCH.home]+itotals[MATCH.away]+.01))*100;
     interestMap[MATCH.home]=(itotals[MATCH.home]/(itotals[MATCH.home]+itotals[MATCH.away]+.01))*100;
   }
-
   historyTimer++;
   if(historyTimer>=45){
     historyTimer=0;
     if(!history[MATCH.home])history[MATCH.home]=[];
     if(!history[MATCH.away])history[MATCH.away]=[];
-    history[MATCH.home].push(homeShare*100);
-    history[MATCH.away].push(awayShare*100);
+    history[MATCH.home].push(homeShare*100);history[MATCH.away].push(awayShare*100);
     if(history[MATCH.home].length>60)history[MATCH.home].shift();
     if(history[MATCH.away].length>60)history[MATCH.away].shift();
   }
-
   if(tick%3===0){
     const n=Math.random()<awayShare?2:1;
     for(let i=0;i<n;i++){
       const src=Math.random()<.45?MATCH.home:searchers[Math.floor(Math.random()*searchers.length)];
       const pt=spawnPointForCountry(src);if(!pt)continue;
-      spawnParticle(pt[0],pt[1],COLORS[MATCH.away]||'#c1272d');
-      addHeat(pt[0],pt[1],COLORS[MATCH.away]||'#c1272d');
+      const col=COLORS[MATCH.away]||'#c1272d';
+      spawnParticle(pt[0],pt[1],col);addHeat(pt[0],pt[1],col);
     }
     if(Math.random()<homeShare*.3){
       const pt=spawnPointForCountry(MATCH.away);
-      if(pt){spawnParticle(pt[0],pt[1],COLORS[MATCH.home]||'#f5d800');addHeat(pt[0],pt[1],COLORS[MATCH.home]||'#f5d800');}
+      if(pt){const col=COLORS[MATCH.home]||'#f5d800';spawnParticle(pt[0],pt[1],col);addHeat(pt[0],pt[1],col);}
     }
   }
-
   setGlow(awayShare>.5?MATCH.away:MATCH.home);
   if(tick%90===0&&!usingRealData){updateInsight();updateRanking();}
   tickParticles();tickHeat();updateClock();
 }
-
 function loop(){simulate();drawChart();requestAnimationFrame(loop);}
 
 // ─── SQUAD ────────────────────────────────────────────────────
@@ -1048,7 +1084,7 @@ function renderSquad(id){
   if(!sq){sec.style.display='none';return;}
   sec.style.display='block';
   document.getElementById('c-coach').textContent=sq.coach;
-  const makeGroup=(elId,pos,players)=>{
+  const g=(elId,pos,players)=>{
     const el=document.getElementById(elId);el.innerHTML='';
     if(!players||!players.length)return;
     const lbl=document.createElement('div');lbl.className='squad-pos';lbl.textContent=pos;el.appendChild(lbl);
@@ -1056,10 +1092,8 @@ function renderSquad(id){
     players.forEach(p=>{const t=document.createElement('span');t.className='player-tag';t.textContent=p;wrap.appendChild(t);});
     el.appendChild(wrap);
   };
-  makeGroup('squad-gk','Goalkeepers',sq.gk);
-  makeGroup('squad-df','Defenders',sq.df);
-  makeGroup('squad-mf','Midfielders',sq.mf);
-  makeGroup('squad-fw','Forwards',sq.fw);
+  g('squad-gk','Goalkeepers',sq.gk);g('squad-df','Defenders',sq.df);
+  g('squad-mf','Midfielders',sq.mf);g('squad-fw','Forwards',sq.fw);
 }
 
 // ─── SIDEBAR ──────────────────────────────────────────────────
@@ -1090,7 +1124,6 @@ function closeSidebar(){
   document.querySelectorAll('.participating').forEach(e=>e.classList.remove('active'));
 }
 window.closeSidebar=closeSidebar;
-
 mapWrap.addEventListener('click',e=>{
   if(dragMovedPx>5)return;
   const el=document.elementFromPoint(e.clientX,e.clientY);
@@ -1098,19 +1131,16 @@ mapWrap.addEventListener('click',e=>{
   if(countryEl)openCountry(countryEl.dataset.country);
   else closeSidebar();
 });
-
 window.addEventListener('resize',()=>{
   const cw=document.getElementById('chart-wrap');
   if(cw&&chartCanvas){chartCanvas.width=cw.clientWidth-44;chartCanvas.height=36;}
 });
-
 window.addEventListener('load',()=>{
-  setupChart();
-  updateInsight();
-  updateRanking();
-  // Fetch live data immediately, then every 60 seconds
+  setupChart();updateInsight();updateRanking();
   fetchLiveData();
-  setInterval(fetchLiveData, 60000);
+  setInterval(fetchLiveData,60000);
+  // Also refresh trends every 5 minutes independently
+  setInterval(()=>fetchTrendsBrowser(MATCH.home,MATCH.away),300000);
   loop();
 });
 
