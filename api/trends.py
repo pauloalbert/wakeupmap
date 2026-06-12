@@ -1,10 +1,10 @@
 import json
-import os
 import time
+import os
+from http.server import BaseHTTPRequestHandler
 
-# Simple cache to avoid hammering Google
 _cache = {'data': None, 'ts': 0}
-CACHE_SECONDS = 300  # 5 minutes
+CACHE_SECONDS = 300
 
 def get_trends(home_country, away_country):
     global _cache
@@ -14,21 +14,15 @@ def get_trends(home_country, away_country):
     try:
         from pytrends.request import TrendReq
         pytrends = TrendReq(hl='en-US', tz=0)
-        # Search terms for each country
         terms = {
-            'brazil': 'Brazil World Cup',
-            'morocco': 'Morocco World Cup',
-            'france': 'France World Cup',
-            'germany': 'Germany World Cup',
-            'spain': 'Spain World Cup',
-            'england': 'England World Cup',
-            'argentina': 'Argentina World Cup',
-            'usa': 'USA World Cup',
-            'japan': 'Japan World Cup',
-            'southkorea': 'South Korea World Cup',
+            'brazil':'Brazil World Cup','morocco':'Morocco World Cup',
+            'france':'France World Cup','germany':'Germany World Cup',
+            'spain':'Spain World Cup','england':'England World Cup',
+            'argentina':'Argentina World Cup','usa':'USA World Cup',
+            'japan':'Japan World Cup','southkorea':'South Korea World Cup',
+            'portugal':'Portugal World Cup','netherlands':'Netherlands World Cup',
         }
-        kw_list = [terms.get(home_country,''), terms.get(away_country,'')]
-        kw_list = [k for k in kw_list if k][:5]
+        kw_list = list(filter(None, [terms.get(home_country,''), terms.get(away_country,'')]))[:5]
         if not kw_list:
             return {}
         pytrends.build_payload(kw_list, timeframe='now 1-H', geo='')
@@ -36,8 +30,7 @@ def get_trends(home_country, away_country):
         result = {}
         for kw in kw_list:
             if kw in df.columns:
-                top = df[kw].nlargest(5)
-                for country, val in top.items():
+                for country, val in df[kw].nlargest(5).items():
                     cid = country.lower().replace(' ','')
                     if cid not in result or result[cid] < val:
                         result[cid] = int(val)
@@ -46,13 +39,18 @@ def get_trends(home_country, away_country):
     except Exception as e:
         return {'_error': str(e)}
 
-def handler(request):
-    params = request.get('queryStringParameters') or {}
-    home = params.get('home','brazil')
-    away = params.get('away','morocco')
-    result = get_trends(home, away)
-    return {
-        'statusCode': 200,
-        'headers': {'Content-Type':'application/json','Access-Control-Allow-Origin':'*'},
-        'body': json.dumps(result)
-    }
+class app(BaseHTTPRequestHandler):
+    def do_GET(self):
+        qs = {}
+        if '?' in self.path:
+            for p in self.path.split('?')[1].split('&'):
+                if '=' in p:
+                    k,v = p.split('=',1)
+                    qs[k]=v
+        result = get_trends(qs.get('home','brazil'), qs.get('away','morocco'))
+        body = json.dumps(result).encode()
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(body)
