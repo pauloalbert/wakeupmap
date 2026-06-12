@@ -95,9 +95,14 @@ header{position:fixed;top:0;left:0;right:0;z-index:200;padding:14px 22px;display
 #hint.gone{opacity:0}
 .hm{font-family:'DM Serif Display',serif;font-size:13px;margin-bottom:3px}
 .hs{font-size:10px;color:var(--muted)}
+/* Live data indicator */
+#data-status{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:201;
+  font-size:9px;color:var(--muted);letter-spacing:.06em;pointer-events:none;opacity:0;transition:opacity .5s}
+#data-status.show{opacity:1}
 </style>
 </head>
 <body>
+
 <header>
   <div>
     <div class="logo">Wake Up <span>Map</span></div>
@@ -111,6 +116,8 @@ header{position:fixed;top:0;left:0;right:0;z-index:200;padding:14px 22px;display
     </div>
   </div>
 </header>
+
+<div id="data-status"></div>
 
 <div id="ranking">
   <div class="rank-title">Most searched right now</div>
@@ -307,19 +314,19 @@ header{position:fixed;top:0;left:0;right:0;z-index:200;padding:14px 22px;display
 
 <div id="bottom">
   <div id="match-bar">
-    <span class="live-badge">Live</span>
+    <span class="live-badge" id="live-badge">Live</span>
     <div class="match-teams">
       <div class="mt"><span class="mflag" id="mb-hflag">🇧🇷</span><span class="mname" id="mb-hname">Brazil</span></div>
-      <span class="mscore" id="mb-score">1 — 0</span>
+      <span class="mscore" id="mb-score">— : —</span>
       <div class="mt"><span class="mname" id="mb-aname">Morocco</span><span class="mflag" id="mb-aflag">🇲🇦</span></div>
-      <span class="mtime" id="mb-minute">67'</span>
+      <span class="mtime" id="mb-minute"></span>
     </div>
-    <span id="match-clock">67:00</span>
-    <div class="match-ctx">Global interest rising: the world is searching Morocco</div>
+    <span id="match-clock">00:00</span>
+    <div class="match-ctx" id="mb-ctx">Loading live data…</div>
   </div>
   <div id="insight-bar">
     <span class="insight-label">Now</span>
-    <span id="insight-text">Calculating…</span>
+    <span id="insight-text">Loading…</span>
     <div class="insight-chips" id="chips"></div>
   </div>
   <div id="chart-wrap">
@@ -669,6 +676,71 @@ const DATA = {
   newzealand:{flag:"🇳🇿",name:"New Zealand",region:"Oceania",debut:false,hook:"New Zealand was one of the last places on Earth to be inhabited by humans — the Māori arrived around the 13th century, only 700 years ago. In historical terms, it is one of the world's newest nations in terms of human presence.",loc:"South Pacific, over 2,000 km from Australia",pop:"~5 million",lang:"English, Māori and sign language (3 official)",copa:"2026 World Cup.",extra:"New Zealand was the first country in the world to give women the right to vote, in 1893 — decades before most Western countries.",interest:62}
 };
 
+// ─── LIVE DATA FROM API ───────────────────────────────────────
+// Fetches /api/index every 60s and updates match + trends
+// Falls back to simulation if API unavailable
+
+async function fetchLiveData() {
+  try {
+    const res = await fetch('/api/index');
+    if (!res.ok) return;
+    const d = await res.json();
+
+    // Update match bar
+    if (d.match && !d.match.error) {
+      MATCH.home = d.match.home || MATCH.home;
+      MATCH.away = d.match.away || MATCH.away;
+      MATCH.homeName = d.match.homeName || MATCH.homeName;
+      MATCH.awayName = d.match.awayName || MATCH.awayName;
+      MATCH.homeFlag = d.match.homeFlag || MATCH.homeFlag;
+      MATCH.awayFlag = d.match.awayFlag || MATCH.awayFlag;
+      MATCH.score = d.match.score || MATCH.score;
+      MATCH.minute = d.match.minute || MATCH.minute;
+      MATCH.status = d.match.status || MATCH.status;
+
+      document.getElementById('mb-hflag').textContent = MATCH.homeFlag;
+      document.getElementById('mb-hname').textContent = MATCH.homeName;
+      document.getElementById('mb-aflag').textContent = MATCH.awayFlag;
+      document.getElementById('mb-aname').textContent = MATCH.awayName;
+      document.getElementById('mb-score').textContent = MATCH.score;
+      document.getElementById('mb-minute').textContent = MATCH.minute ? MATCH.minute + "'" : '';
+
+      // Sync clock to real match minute
+      if (MATCH.minute > 0) {
+        clockStart = Date.now() - MATCH.minute * 60 * 1000;
+      }
+    }
+
+    // Update trends — real Google Trends data
+    if (d.trends && Object.keys(d.trends).length > 0 && !d.trends._error) {
+      // Merge real trends into interestMap
+      Object.entries(d.trends).forEach(([id, val]) => {
+        if (typeof val === 'number') {
+          interestMap[id] = val;
+        }
+      });
+
+      // Recalculate home/away share from real data
+      const homeVal = d.trends[MATCH.home] || 0;
+      const awayVal = d.trends[MATCH.away] || 0;
+      const total = homeVal + awayVal + 0.01;
+      realAwayShare = awayVal / total;
+      realHomeShare = homeVal / total;
+      usingRealData = true;
+
+      updateInsight();
+      updateRanking();
+    }
+  } catch(e) {
+    // silently fall back to simulation
+  }
+}
+
+let realAwayShare = 0.5;
+let realHomeShare = 0.5;
+let usingRealData = false;
+
+
 // ─── SVG VIEWBOX ZOOM/PAN ─────────────────────────────────────
 const SVG_W = 1000, SVG_H = 500;
 const svg = document.getElementById('world-map');
@@ -676,73 +748,73 @@ let vx=0, vy=0, vw=SVG_W, vh=SVG_H;
 const MAX_ZOOM = 8;
 
 function setViewBox(x,y,w,h) {
-  w = Math.max(SVG_W/MAX_ZOOM, Math.min(SVG_W,w));
-  h = w*SVG_H/SVG_W;
-  x = Math.max(0, Math.min(SVG_W-w,x));
-  y = Math.max(0, Math.min(SVG_H-h,y));
-  vx=x; vy=y; vw=w; vh=h;
+  w=Math.max(SVG_W/MAX_ZOOM,Math.min(SVG_W,w));
+  h=w*SVG_H/SVG_W;
+  x=Math.max(0,Math.min(SVG_W-w,x));
+  y=Math.max(0,Math.min(SVG_H-h,y));
+  vx=x;vy=y;vw=w;vh=h;
   svg.setAttribute('viewBox',`${x} ${y} ${w} ${h}`);
 }
-function currentZoom() { return SVG_W/vw; }
+function currentZoom(){return SVG_W/vw;}
 svg.setAttribute('viewBox',`0 0 ${SVG_W} ${SVG_H}`);
 svg.setAttribute('preserveAspectRatio','xMidYMid meet');
 
-const mapWrap = document.getElementById('map-wrap');
+const mapWrap=document.getElementById('map-wrap');
 mapWrap.addEventListener('wheel',e=>{
   e.preventDefault();
-  const f = e.deltaY<0 ? 1/1.18 : 1.18;
-  const newW = Math.max(SVG_W/MAX_ZOOM, Math.min(SVG_W, vw*f));
-  if (newW===vw) return;
+  const f=e.deltaY<0?1/1.18:1.18;
+  const newW=Math.max(SVG_W/MAX_ZOOM,Math.min(SVG_W,vw*f));
+  if(newW===vw)return;
   const rect=svg.getBoundingClientRect();
   const mx=(e.clientX-rect.left)/rect.width*vw+vx;
   const my=(e.clientY-rect.top)/rect.height*vh+vy;
   const newH=newW*SVG_H/SVG_W;
-  setViewBox(mx-(e.clientX-rect.left)/rect.width*newW, my-(e.clientY-rect.top)/rect.height*newH, newW, newH);
+  setViewBox(mx-(e.clientX-rect.left)/rect.width*newW,my-(e.clientY-rect.top)/rect.height*newH,newW,newH);
 },{passive:false});
 
-let dragging=false, dragSvgX=0, dragSvgY=0, dragMovedPx=0, dragCX=0, dragCY=0;
+let dragging=false,dragSvgX=0,dragSvgY=0,dragMovedPx=0,dragCX=0,dragCY=0;
 mapWrap.addEventListener('mousedown',e=>{
-  if(e.button!==0) return;
-  dragging=true; dragMovedPx=0; dragCX=e.clientX; dragCY=e.clientY;
+  if(e.button!==0)return;
+  dragging=true;dragMovedPx=0;dragCX=e.clientX;dragCY=e.clientY;
   const rect=svg.getBoundingClientRect();
   dragSvgX=(e.clientX-rect.left)/rect.width*vw+vx;
   dragSvgY=(e.clientY-rect.top)/rect.height*vh+vy;
   mapWrap.classList.add('dragging');
 });
 window.addEventListener('mousemove',e=>{
-  if(!dragging) return;
+  if(!dragging)return;
   dragMovedPx=Math.max(dragMovedPx,Math.abs(e.clientX-dragCX)+Math.abs(e.clientY-dragCY));
   const rect=svg.getBoundingClientRect();
   const cx=(e.clientX-rect.left)/rect.width*vw+vx;
   const cy=(e.clientY-rect.top)/rect.height*vh+vy;
   setViewBox(vx+(dragSvgX-cx),vy+(dragSvgY-cy),vw,vh);
 });
-window.addEventListener('mouseup',()=>{ dragging=false; mapWrap.classList.remove('dragging'); });
+window.addEventListener('mouseup',()=>{dragging=false;mapWrap.classList.remove('dragging');});
 
 // ─── CITY-BASED SPAWN ─────────────────────────────────────────
-function gaussian() {
+function gaussian(){
   let u=0,v=0;
-  while(u===0) u=Math.random();
-  while(v===0) v=Math.random();
+  while(u===0)u=Math.random();
+  while(v===0)v=Math.random();
   return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
 }
-function spawnPointForCountry(id) {
-  const cities=CITIES[id];
-  if(!cities||!cities.length) {
-    const c=CENTROIDS[id];
-    return c ? [c[0]+(Math.random()-.5)*4, c[1]+(Math.random()-.5)*3] : null;
+function spawnPointForCountry(id){
+  const c=CITIES[id];
+  if(!c||!c.length){
+    const ct=CENTROIDS[id];
+    return ct?[ct[0]+(Math.random()-.5)*4,ct[1]+(Math.random()-.5)*3]:null;
   }
-  const totalW=cities.reduce((s,c)=>s+c[2],0);
-  let r=Math.random()*totalW, city=cities[0];
-  for(const c of cities){r-=c[2]; if(r<=0){city=c;break;}}
-  return [city[0]+gaussian()*1.4, city[1]+gaussian()*1.1];
+  const tw=c.reduce((s,x)=>s+x[2],0);
+  let r=Math.random()*tw,city=c[0];
+  for(const x of c){r-=x[2];if(r<=0){city=x;break;}}
+  return[city[0]+gaussian()*1.4,city[1]+gaussian()*1.1];
 }
 
 // ─── MODE ─────────────────────────────────────────────────────
 let mode='live';
 const heatLayer=document.getElementById('heat-layer');
 const partLayer=document.getElementById('particle-layer');
-function setMode(m) {
+function setMode(m){
   mode=m;
   document.getElementById('btn-live').classList.toggle('active',m==='live');
   document.getElementById('btn-heat').classList.toggle('active',m==='heat');
@@ -751,30 +823,17 @@ function setMode(m) {
 }
 window.setMode=setMode;
 
-// ─── MATCH STATE (updated by API) ─────────────────────────────
-let MATCH = { home:'brazil', away:'morocco', homeName:'Brazil', awayName:'Morocco', homeFlag:'🇧🇷', awayFlag:'🇲🇦', score:'1 — 0', minute:67, status:'LIVE' };
-
-async function fetchLiveData() {
-  try {
-    const res = await fetch('/api/data');
-    if (!res.ok) return;
-    const d = await res.json();
-    if (d.match) {
-      MATCH = d.match;
-      document.getElementById('mb-hflag').textContent = d.match.homeFlag||'';
-      document.getElementById('mb-hname').textContent = d.match.homeName||'';
-      document.getElementById('mb-aflag').textContent = d.match.awayFlag||'';
-      document.getElementById('mb-aname').textContent = d.match.awayName||'';
-      document.getElementById('mb-score').textContent = d.match.score||'';
-      document.getElementById('mb-minute').textContent = d.match.minute ? d.match.minute+"'" : '';
-    }
-    if (d.trends) Object.assign(interestMap, d.trends);
-  } catch(e) { /* stay on simulation */ }
-}
+// ─── MATCH STATE ──────────────────────────────────────────────
+let MATCH={
+  home:'brazil',away:'morocco',
+  homeName:'Brazil',awayName:'Morocco',
+  homeFlag:'🇧🇷',awayFlag:'🇲🇦',
+  score:'— : —',minute:0,status:'TIMED'
+};
 
 // ─── PARTICLES ────────────────────────────────────────────────
 const particles=[];
-function spawnParticle(svgX,svgY,color) {
+function spawnParticle(svgX,svgY,color){
   const el=document.createElementNS('http://www.w3.org/2000/svg','circle');
   el.setAttribute('cx',svgX.toFixed(1));
   el.setAttribute('cy',svgY.toFixed(1));
@@ -784,20 +843,20 @@ function spawnParticle(svgX,svgY,color) {
   partLayer.appendChild(el);
   particles.push({el,age:0,fadeIn:90,hold:240+Math.random()*240,fadeOut:300});
 }
-function tickParticles() {
+function tickParticles(){
   for(let i=particles.length-1;i>=0;i--){
-    const p=particles[i]; p.age++;
+    const p=particles[i];p.age++;
     let op;
-    if(p.age<p.fadeIn) op=p.age/p.fadeIn;
-    else if(p.age<p.fadeIn+p.hold) op=1;
-    else { const t=(p.age-p.fadeIn-p.hold)/p.fadeOut; if(t>=1){p.el.remove();particles.splice(i,1);continue;} op=1-t; }
+    if(p.age<p.fadeIn)op=p.age/p.fadeIn;
+    else if(p.age<p.fadeIn+p.hold)op=1;
+    else{const t=(p.age-p.fadeIn-p.hold)/p.fadeOut;if(t>=1){p.el.remove();particles.splice(i,1);continue;}op=1-t;}
     p.el.setAttribute('opacity',(op*0.75).toFixed(2));
   }
 }
 
 // ─── HEAT ─────────────────────────────────────────────────────
 const heatPoints=[];
-function addHeat(svgX,svgY,color) {
+function addHeat(svgX,svgY,color){
   if(heatPoints.length>=250){heatPoints.shift().el.remove();}
   const el=document.createElementNS('http://www.w3.org/2000/svg','circle');
   el.setAttribute('cx',svgX.toFixed(1));
@@ -809,7 +868,7 @@ function addHeat(svgX,svgY,color) {
   heatLayer.appendChild(el);
   heatPoints.push({el,age:0,targetOp:0.025+Math.random()*0.02});
 }
-function tickHeat() {
+function tickHeat(){
   for(const p of heatPoints){
     if(p.age<300){p.age++;p.el.setAttribute('opacity',(p.targetOp*p.age/300).toFixed(4));}
   }
@@ -817,11 +876,11 @@ function tickHeat() {
 
 // ─── GLOW ─────────────────────────────────────────────────────
 let glowId=null;
-function setGlow(id) {
-  if(glowId===id) return;
+function setGlow(id){
+  if(glowId===id)return;
   if(glowId){const p=document.getElementById('path-'+glowId);if(p){p.style.stroke='';p.style.filter='';p.style.strokeWidth='';}}
-  glowId=id; if(!id) return;
-  const el=document.getElementById('path-'+id); if(!el) return;
+  glowId=id;if(!id)return;
+  const el=document.getElementById('path-'+id);if(!el)return;
   const col=COLORS[id]||'#fff';
   el.style.stroke=col;
   el.style.filter=`drop-shadow(0 0 3px ${col})`;
@@ -829,8 +888,8 @@ function setGlow(id) {
 }
 
 // ─── CLOCK ────────────────────────────────────────────────────
-let clockStart=Date.now()-67*60*1000;
-function updateClock() {
+let clockStart=Date.now();
+function updateClock(){
   const s=Math.floor((Date.now()-clockStart)/1000);
   document.getElementById('match-clock').textContent=
     String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
@@ -838,21 +897,31 @@ function updateClock() {
 
 // ─── RANKING ──────────────────────────────────────────────────
 const interestMap={morocco:0,brazil:0,france:30,germany:20,usa:18,spain:16,england:22,argentina:25,japan:10,portugal:8};
-const NAMES={morocco:'Morocco',brazil:'Brazil',france:'France',germany:'Germany',usa:'USA',spain:'Spain',england:'England',argentina:'Argentina',japan:'Japan',portugal:'Portugal',southkorea:'South Korea',netherlands:'Netherlands',italy:'Italy'};
-function updateRanking() {
+const NAMES={
+  morocco:'Morocco',brazil:'Brazil',france:'France',germany:'Germany',
+  usa:'USA',spain:'Spain',england:'England',argentina:'Argentina',
+  japan:'Japan',portugal:'Portugal',southkorea:'South Korea',
+  netherlands:'Netherlands',italy:'Italy',mexico:'Mexico',
+  colombia:'Colombia',canada:'Canada',australia:'Australia',
+  senegal:'Senegal',ghana:'Ghana',ivory:'Ivory Coast',
+  southafrica:'South Africa',algeria:'Algeria',egypt:'Egypt',
+  uruguay:'Uruguay',ecuador:'Ecuador',chile:'Chile',
+  turkey:'Turkey',iran:'Iran',saudi:'Saudi Arabia',qatar:'Qatar',
+};
+function updateRanking(){
   const entries=Object.entries(interestMap).sort((a,b)=>b[1]-a[1]);
-  const top5=entries.slice(0,5), rest=entries.slice(5).reduce((s,[,v])=>s+v,0);
+  const top5=entries.slice(0,5),rest=entries.slice(5).reduce((s,[,v])=>s+v,0);
   const total=entries.reduce((s,[,v])=>s+v,.01);
-  const container=document.getElementById('rank-rows'); container.innerHTML='';
+  const container=document.getElementById('rank-rows');container.innerHTML='';
   top5.forEach(([id,val],i)=>{
-    const pct=Math.round((val/total)*100), col=COLORS[id]||'#888';
-    const row=document.createElement('div'); row.className='rank-row';
+    const pct=Math.round((val/total)*100),col=COLORS[id]||'#888';
+    const row=document.createElement('div');row.className='rank-row';
     row.innerHTML=`<span class="rank-num">${i+1}</span><div class="rank-bar-wrap"><div class="rank-bar" style="width:${pct}%;background:${col}"></div></div><span class="rank-name">${NAMES[id]||id}</span><span class="rank-pct">${pct}%</span>`;
     container.appendChild(row);
   });
   if(rest>0){
     const pct=Math.round((rest/total)*100);
-    const row=document.createElement('div'); row.className='rank-row';
+    const row=document.createElement('div');row.className='rank-row';
     row.innerHTML=`<span class="rank-num">+</span><div class="rank-bar-wrap"><div class="rank-bar" style="width:${pct}%;background:#333"></div></div><span class="rank-name" style="color:var(--muted)">Others</span><span class="rank-pct" style="color:var(--muted)">${pct}%</span>`;
     container.appendChild(row);
   }
@@ -860,88 +929,117 @@ function updateRanking() {
 
 // ─── INSIGHT ──────────────────────────────────────────────────
 const itotals={brazil:0,morocco:0};
-function updateInsight() {
-  const th=itotals.brazil,ta=itotals.morocco,total=th+ta+.01;
-  const pct=Math.round((ta/total)*100);
+function updateInsight(){
+  let awayShare,homeShare;
+  if(usingRealData){
+    awayShare=realAwayShare;
+    homeShare=realHomeShare;
+  } else {
+    const th=itotals[MATCH.home]||0,ta=itotals[MATCH.away]||0,total=th+ta+.01;
+    awayShare=ta/total; homeShare=th/total;
+  }
+  const pct=Math.round(awayShare*100);
   let txt;
-  if(pct>65) txt=`${pct}% of today's match searches are about ${MATCH.awayName||'Morocco'}`;
-  else if(pct<35) txt=`${100-pct}% of searches right now are about ${MATCH.homeName||'Brazil'}`;
-  else txt=`Balanced interest: ${MATCH.homeName||'Brazil'} and ${MATCH.awayName||'Morocco'} share global attention`;
+  if(pct>65) txt=`${pct}% of today's searches are about ${MATCH.awayName}`;
+  else if(pct<35) txt=`${100-pct}% of searches right now are about ${MATCH.homeName}`;
+  else txt=`Balanced: ${MATCH.homeName} and ${MATCH.awayName} share global interest`;
   document.getElementById('insight-text').textContent=txt;
-  const chips=document.getElementById('chips'); chips.innerHTML='';
-  [[MATCH.home||'brazil',MATCH.homeName||'Brazil',COLORS[MATCH.home||'brazil']],[MATCH.away||'morocco',MATCH.awayName||'Morocco',COLORS[MATCH.away||'morocco']]].forEach(([id,name,col])=>{
-    const c=document.createElement('span'); c.className='chip';
-    c.style.borderColor=col; c.style.color=col; c.textContent=name; chips.appendChild(c);
+  const chips=document.getElementById('chips');chips.innerHTML='';
+  [[MATCH.home,MATCH.homeName,COLORS[MATCH.home]],[MATCH.away,MATCH.awayName,COLORS[MATCH.away]]].forEach(([id,name,col])=>{
+    const c=document.createElement('span');c.className='chip';
+    c.style.borderColor=col;c.style.color=col;c.textContent=name;chips.appendChild(c);
   });
 }
 
 // ─── CHART ────────────────────────────────────────────────────
-let chartCtx, chartCanvas;
-const history={brazil:[],morocco:[]};
+let chartCtx,chartCanvas;
+const history={};
 let historyTimer=0;
-function setupChart() {
+function setupChart(){
   chartCanvas=document.getElementById('chart-canvas');
   chartCtx=chartCanvas.getContext('2d');
   const cw=document.getElementById('chart-wrap');
-  chartCanvas.width=cw.clientWidth-44; chartCanvas.height=36;
+  chartCanvas.width=cw.clientWidth-44;chartCanvas.height=36;
 }
-function drawChart() {
-  if(!chartCtx) return;
+function drawChart(){
+  if(!chartCtx)return;
   const w=chartCanvas.width,h=chartCanvas.height;
   chartCtx.clearRect(0,0,w,h);
-  const hh=history[MATCH.home||'brazil'], ha=history[MATCH.away||'morocco'];
-  if(!hh||!hh.length) return;
-  const maxLen=Math.max((hh||[]).length,(ha||[]).length,2), maxVal=Math.max(...(hh||[0]),...(ha||[0]),1);
+  const hh=history[MATCH.home]||[],ha=history[MATCH.away]||[];
+  if(!hh.length)return;
+  const maxLen=Math.max(hh.length,ha.length,2),maxVal=Math.max(...hh,...ha,1);
   const line=(data,color)=>{
-    if(!data||!data.length) return;
-    chartCtx.strokeStyle=color; chartCtx.lineWidth=1.5; chartCtx.globalAlpha=.8;
+    if(!data.length)return;
+    chartCtx.strokeStyle=color;chartCtx.lineWidth=1.5;chartCtx.globalAlpha=.8;
     chartCtx.beginPath();
     data.forEach((v,i)=>{const x=(i/(maxLen-1))*w,y=h-(v/maxVal)*(h*.85)-h*.05;i===0?chartCtx.moveTo(x,y):chartCtx.lineTo(x,y);});
-    chartCtx.stroke(); chartCtx.globalAlpha=1;
+    chartCtx.stroke();chartCtx.globalAlpha=1;
   };
-  chartCtx.strokeStyle='rgba(255,255,255,.04)'; chartCtx.lineWidth=1;
+  chartCtx.strokeStyle='rgba(255,255,255,.04)';chartCtx.lineWidth=1;
   chartCtx.beginPath();chartCtx.moveTo(0,h/2);chartCtx.lineTo(w,h/2);chartCtx.stroke();
-  line(hh, COLORS[MATCH.home||'brazil']||'#f5d800');
-  line(ha, COLORS[MATCH.away||'morocco']||'#c1272d');
+  line(hh,COLORS[MATCH.home]||'#f5d800');
+  line(ha,COLORS[MATCH.away]||'#c1272d');
 }
 
-// ─── SIMULATION ───────────────────────────────────────────────
-let tick=0, awayBurst=0;
+// ─── SIMULATION (fallback when no real data) ──────────────────
+let tick=0,awayBurst=0;
 const searchers=['brazil','france','spain','england','germany','usa','canada','portugal','netherlands','argentina','mexico','japan','colombia'];
-function simulate() {
+function simulate(){
   tick++;
   awayBurst=Math.max(0,awayBurst-.004);
-  if(Math.random()<.01) awayBurst=.5+Math.random()*.5;
-  const awayShare=.38+awayBurst*.5, homeShare=1-awayShare;
-  itotals.brazil+=homeShare*2; itotals.morocco+=awayShare*5;
-  interestMap[MATCH.away||'morocco']=(itotals.morocco/(itotals.brazil+itotals.morocco+.01))*100;
-  interestMap[MATCH.home||'brazil']=(itotals.brazil/(itotals.brazil+itotals.morocco+.01))*100;
+  if(Math.random()<.01)awayBurst=.5+Math.random()*.5;
+
+  // Use real data shares if available, otherwise simulate
+  let awayShare,homeShare;
+  if(usingRealData){
+    // Small oscillation around real value for visual interest
+    awayShare=realAwayShare+(Math.random()-.5)*.05;
+    homeShare=1-awayShare;
+  } else {
+    awayShare=.38+awayBurst*.5;
+    homeShare=1-awayShare;
+  }
+
+  if(!itotals[MATCH.home])itotals[MATCH.home]=0;
+  if(!itotals[MATCH.away])itotals[MATCH.away]=0;
+  itotals[MATCH.home]+=homeShare*2;
+  itotals[MATCH.away]+=awayShare*5;
+
+  if(!usingRealData){
+    interestMap[MATCH.away]=(itotals[MATCH.away]/(itotals[MATCH.home]+itotals[MATCH.away]+.01))*100;
+    interestMap[MATCH.home]=(itotals[MATCH.home]/(itotals[MATCH.home]+itotals[MATCH.away]+.01))*100;
+  }
+
   historyTimer++;
   if(historyTimer>=45){
     historyTimer=0;
-    if(!history[MATCH.home]) history[MATCH.home]=[];
-    if(!history[MATCH.away]) history[MATCH.away]=[];
-    history[MATCH.home].push(homeShare*100); history[MATCH.away].push(awayShare*100);
-    if(history[MATCH.home].length>60) history[MATCH.home].shift();
-    if(history[MATCH.away].length>60) history[MATCH.away].shift();
+    if(!history[MATCH.home])history[MATCH.home]=[];
+    if(!history[MATCH.away])history[MATCH.away]=[];
+    history[MATCH.home].push(homeShare*100);
+    history[MATCH.away].push(awayShare*100);
+    if(history[MATCH.home].length>60)history[MATCH.home].shift();
+    if(history[MATCH.away].length>60)history[MATCH.away].shift();
   }
+
   if(tick%3===0){
     const n=Math.random()<awayShare?2:1;
     for(let i=0;i<n;i++){
       const src=Math.random()<.45?MATCH.home:searchers[Math.floor(Math.random()*searchers.length)];
-      const pt=spawnPointForCountry(src); if(!pt) continue;
-      spawnParticle(pt[0],pt[1],COLORS[MATCH.away||'morocco']||'#c1272d');
-      addHeat(pt[0],pt[1],COLORS[MATCH.away||'morocco']||'#c1272d');
+      const pt=spawnPointForCountry(src);if(!pt)continue;
+      spawnParticle(pt[0],pt[1],COLORS[MATCH.away]||'#c1272d');
+      addHeat(pt[0],pt[1],COLORS[MATCH.away]||'#c1272d');
     }
     if(Math.random()<homeShare*.3){
       const pt=spawnPointForCountry(MATCH.away);
-      if(pt){spawnParticle(pt[0],pt[1],COLORS[MATCH.home||'brazil']||'#f5d800');addHeat(pt[0],pt[1],COLORS[MATCH.home||'brazil']||'#f5d800');}
+      if(pt){spawnParticle(pt[0],pt[1],COLORS[MATCH.home]||'#f5d800');addHeat(pt[0],pt[1],COLORS[MATCH.home]||'#f5d800');}
     }
   }
+
   setGlow(awayShare>.5?MATCH.away:MATCH.home);
-  if(tick%90===0){updateInsight();updateRanking();}
-  tickParticles(); tickHeat(); updateClock();
+  if(tick%90===0&&!usingRealData){updateInsight();updateRanking();}
+  tickParticles();tickHeat();updateClock();
 }
+
 function loop(){simulate();drawChart();requestAnimationFrame(loop);}
 
 // ─── SQUAD ────────────────────────────────────────────────────
@@ -952,7 +1050,7 @@ function renderSquad(id){
   document.getElementById('c-coach').textContent=sq.coach;
   const makeGroup=(elId,pos,players)=>{
     const el=document.getElementById(elId);el.innerHTML='';
-    if(!players||!players.length) return;
+    if(!players||!players.length)return;
     const lbl=document.createElement('div');lbl.className='squad-pos';lbl.textContent=pos;el.appendChild(lbl);
     const wrap=document.createElement('div');wrap.className='squad-players';
     players.forEach(p=>{const t=document.createElement('span');t.className='player-tag';t.textContent=p;wrap.appendChild(t);});
@@ -992,6 +1090,7 @@ function closeSidebar(){
   document.querySelectorAll('.participating').forEach(e=>e.classList.remove('active'));
 }
 window.closeSidebar=closeSidebar;
+
 mapWrap.addEventListener('click',e=>{
   if(dragMovedPx>5)return;
   const el=document.elementFromPoint(e.clientX,e.clientY);
@@ -999,14 +1098,19 @@ mapWrap.addEventListener('click',e=>{
   if(countryEl)openCountry(countryEl.dataset.country);
   else closeSidebar();
 });
+
 window.addEventListener('resize',()=>{
   const cw=document.getElementById('chart-wrap');
   if(cw&&chartCanvas){chartCanvas.width=cw.clientWidth-44;chartCanvas.height=36;}
 });
+
 window.addEventListener('load',()=>{
-  setupChart();updateInsight();updateRanking();
+  setupChart();
+  updateInsight();
+  updateRanking();
+  // Fetch live data immediately, then every 60 seconds
   fetchLiveData();
-  setInterval(fetchLiveData,60000);
+  setInterval(fetchLiveData, 60000);
   loop();
 });
 
