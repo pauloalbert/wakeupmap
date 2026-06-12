@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Wake Up Map — 2026 World Cup</title>
+<title>Wake Up Map &#8212; 2026 World Cup</title>
 <meta name="description" content="This map doesn't show who's winning. It shows who the world is discovering.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
@@ -12,185 +12,166 @@
 :root{
   --bg:#090910;--s1:#111118;--s2:#181820;--s3:#1e1e28;
   --txt:#f0ede6;--muted:#66667a;--border:rgba(240,237,230,.07);
-  --acc:#c8f04d;--acc2:rgba(200,240,77,.12);
-  --card-bg:#13131c;
+  --acc:#c8f04d;--acc2:rgba(200,240,77,.12);--card:#13131c;
 }
 body.light{
-  --bg:#f4f3ef;--s1:#ffffff;--s2:#f0eeea;--s3:#e8e6e0;
-  --txt:#1a1a22;--muted:#888898;--border:rgba(26,26,34,.1);
-  --card-bg:#ffffff;
+  --bg:#f0eeea;--s1:#ffffff;--s2:#e8e6e1;--s3:#dddbd5;
+  --txt:#1a1a22;--muted:#88889a;--border:rgba(26,26,34,.1);--card:#ffffff;
 }
 html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;overflow:hidden;transition:background .3s,color .3s}
-header{position:fixed;top:0;left:0;right:0;z-index:200;padding:13px 22px;
-  display:flex;align-items:center;justify-content:space-between;
-  background:linear-gradient(to bottom,rgba(9,9,16,.97) 55%,transparent);pointer-events:none}
-body.light header{background:linear-gradient(to bottom,rgba(244,243,239,.97) 55%,transparent)}
+header{position:fixed;top:0;left:0;right:0;z-index:200;padding:13px 22px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(9,9,16,.97) 55%,transparent);pointer-events:none}
+body.light header{background:linear-gradient(to bottom,rgba(240,238,234,.97) 55%,transparent)}
 .logo{font-family:'DM Serif Display',serif;font-size:18px;color:var(--txt)}.logo span{color:var(--acc)}
 .tagline{font-size:9px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-top:2px}
-.hdr-right{text-align:right;pointer-events:all;display:flex;align-items:center;gap:12px}
+.hdr-right{text-align:right;pointer-events:all;display:flex;align-items:center;gap:10px}
 .legend-txt{font-size:10px;color:var(--muted);line-height:1.5}
 .pdot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--acc);margin-right:4px;vertical-align:middle;animation:pdot 2s ease-in-out infinite}
 @keyframes pdot{0%,100%{opacity:1}50%{opacity:.25}}
-.hdr-controls{display:flex;align-items:center;gap:8px}
+.hdr-controls{display:flex;align-items:center;gap:6px}
 .mode-toggle{display:flex;gap:2px;background:var(--s2);border:1px solid var(--border);border-radius:20px;padding:2px}
 .mt-btn{font-size:9px;padding:4px 10px;border-radius:18px;border:none;background:transparent;color:var(--muted);cursor:pointer;letter-spacing:.06em;text-transform:uppercase;transition:all .2s;white-space:nowrap}
 .mt-btn.active{background:var(--s3);color:var(--txt)}
-.theme-btn{width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:var(--s2);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .2s}
-.theme-btn:hover{border-color:var(--txt);color:var(--txt)}
+.icon-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:var(--s2);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s;flex-shrink:0}
+.icon-btn:hover{border-color:var(--acc);color:var(--acc)}
 .hist-btn{font-size:9px;padding:4px 10px;border-radius:18px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;letter-spacing:.06em;text-transform:uppercase;transition:all .2s;white-space:nowrap}
 .hist-btn:hover{border-color:var(--acc);color:var(--acc)}
+/* trends status indicator */
+#trends-status{font-size:9px;padding:3px 8px;border-radius:20px;border:1px solid var(--border);color:var(--muted);letter-spacing:.05em;flex-shrink:0}
+#trends-status.live{border-color:rgba(200,240,77,.4);color:var(--acc)}
+#trends-status.fail{border-color:rgba(255,80,80,.3);color:#ff6060}
 
 #map-wrap{width:100vw;height:100vh;overflow:hidden;position:relative;cursor:grab;user-select:none}
 #map-wrap.dragging{cursor:grabbing}
 #world-map{width:100%;height:100%;display:block}
 .country{fill:#161622;stroke:#090910;stroke-width:.4;transition:fill .2s}
-body.light .country{fill:#dddbd5;stroke:#f4f3ef}
+body.light .country{fill:#d8d6d0;stroke:#f0eeea}
 .country.participating{fill:#1a2335;cursor:pointer}
-body.light .country.participating{fill:#c8d4e8}
+body.light .country.participating{fill:#b8c8dc}
 .country.participating:hover{fill:#22304a}
-body.light .country.participating:hover{fill:#adc0dc}
+body.light .country.participating:hover{fill:#9ab4cc}
 .country.active{fill:rgba(200,240,77,.09)!important;stroke:rgba(200,240,77,.4)!important;stroke-width:1!important}
 #particle-layer,#heat-layer{pointer-events:none}
 #heat-layer{display:none}
 
-/* TOOLTIP */
-#pt-tooltip{
-  position:fixed;z-index:500;
-  background:var(--s1);border:1px solid var(--border);
-  border-radius:6px;padding:5px 9px;
-  font-size:10px;color:var(--txt);
-  pointer-events:none;opacity:0;transition:opacity .15s;
-  display:flex;align-items:center;gap:5px;
-  box-shadow:0 4px 16px rgba(0,0,0,.3);
-  white-space:nowrap;
-}
+#pt-tooltip{position:fixed;z-index:500;background:var(--s1);border:1px solid var(--border);border-radius:6px;padding:5px 10px;font-size:11px;color:var(--txt);pointer-events:none;opacity:0;transition:opacity .15s;display:flex;align-items:center;gap:5px;box-shadow:0 4px 16px rgba(0,0,0,.25);white-space:nowrap}
 
-/* RANKING */
-#ranking{position:fixed;top:90px;left:22px;z-index:100;pointer-events:none}
+#ranking{position:fixed;top:88px;left:22px;z-index:100;pointer-events:none}
 .rank-title{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:7px}
 .rank-row{display:flex;align-items:center;gap:7px;margin-bottom:5px}
 .rank-num{font-size:9px;color:var(--muted);width:12px;text-align:right;flex-shrink:0}
-.rank-bar-wrap{width:70px;height:2px;background:rgba(128,128,128,.2);border-radius:1px;overflow:hidden;flex-shrink:0}
+.rank-bar-wrap{width:70px;height:2px;background:rgba(128,128,128,.15);border-radius:1px;overflow:hidden;flex-shrink:0}
 .rank-bar{height:100%;border-radius:1px;transition:width .8s ease}
 .rank-name{font-size:10px;color:var(--txt)}
-.rank-pct{font-size:10px;color:var(--muted);margin-left:3px}
+.rank-pct{font-size:10px;color:var(--muted);margin-left:2px}
 
-/* BOTTOM */
-#bottom{position:fixed;bottom:0;left:0;right:0;z-index:150;background:var(--card-bg);border-top:1px solid var(--border)}
-#match-bar{display:flex;align-items:center;justify-content:center;gap:14px;padding:8px 22px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+#bottom{position:fixed;bottom:0;left:0;right:0;z-index:150;background:var(--card);border-top:1px solid var(--border)}
+#match-bar{display:flex;align-items:center;justify-content:center;gap:12px;padding:7px 22px;border-bottom:1px solid var(--border);flex-wrap:wrap;min-height:40px}
 .live-badge{font-size:8px;color:var(--acc);text-transform:uppercase;letter-spacing:.14em;padding:2px 7px;border:1px solid rgba(200,240,77,.35);border-radius:20px;animation:livepulse 1.5s ease-in-out infinite}
 @keyframes livepulse{0%,100%{opacity:1}50%{opacity:.5}}
 .live-badge.hidden{display:none}
-.match-teams{display:flex;align-items:center;gap:10px}
-.mt{display:flex;align-items:center;gap:5px}
+.match-teams{display:flex;align-items:center;gap:8px}
+.mt{display:flex;align-items:center;gap:4px}
 .mflag{font-size:15px}.mname{font-size:11px;color:var(--txt)}
-.mscore{font-family:'DM Serif Display',serif;font-size:15px;min-width:50px;text-align:center;color:var(--txt)}
+.mscore{font-family:'DM Serif Display',serif;font-size:15px;min-width:48px;text-align:center;color:var(--txt)}
 .mtime{font-size:10px;color:var(--muted)}
-#match-clock{font-size:11px;font-variant-numeric:tabular-nums;border-left:1px solid var(--border);padding-left:12px;letter-spacing:.04em;color:var(--txt)}
-.match-ctx{font-size:10px;color:var(--muted);border-left:1px solid var(--border);padding-left:14px;max-width:220px;line-height:1.4}
-/* next/last match info */
-#match-extra{font-size:10px;color:var(--muted);border-left:1px solid var(--border);padding-left:14px;line-height:1.5}
+#match-clock{font-size:11px;font-variant-numeric:tabular-nums;border-left:1px solid var(--border);padding-left:10px;letter-spacing:.04em;color:var(--txt)}
+.match-ctx{font-size:10px;color:var(--muted);border-left:1px solid var(--border);padding-left:12px;max-width:200px;line-height:1.4}
+#match-extra{font-size:10px;color:var(--muted);border-left:1px solid var(--border);padding-left:12px;line-height:1.5}
 #match-extra strong{color:var(--txt);font-weight:500}
 #countdown{color:var(--acc);font-weight:500}
 
-#insight-bar{padding:5px 22px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border)}
+/* insight bar */
+#insight-bar{padding:5px 22px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);min-height:30px}
 .insight-label{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);flex-shrink:0}
 #insight-text{font-size:11px;flex:1;color:var(--txt)}
-.insight-chips{display:flex;gap:6px}
+.insight-chips{display:flex;gap:5px}
 .chip{font-size:9px;padding:2px 8px;border-radius:20px;border:1px solid;letter-spacing:.04em}
 
-#chart-wrap{padding:6px 22px 8px;height:56px}
+/* post-match summary */
+#match-summary{display:none;padding:7px 22px;border-bottom:1px solid var(--border);background:var(--s2)}
+#match-summary.visible{display:block}
+.summary-title{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px}
+.summary-stats{display:flex;gap:18px;flex-wrap:wrap}
+.stat-item{font-size:11px;color:var(--muted)}
+.stat-item span{color:var(--acc);font-weight:500}
+
+/* chart */
+#chart-wrap{padding:5px 22px 7px;height:52px}
+#chart-wrap.hidden{display:none}
 .chart-title{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:3px}
 #chart-canvas{display:block}
 
-/* POST-MATCH SUMMARY */
-#match-summary{
-  display:none;
-  padding:10px 22px;border-bottom:1px solid var(--border);
-  background:var(--s2);
-}
-#match-summary.visible{display:block}
-.summary-title{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px}
-.summary-stats{display:flex;gap:20px;flex-wrap:wrap}
-.stat-item{font-size:11px;color:var(--txt)}
-.stat-item span{color:var(--acc);font-weight:500}
-
-/* HISTORY PANEL */
-#history-panel{
-  position:fixed;top:0;left:0;bottom:0;width:320px;
-  background:var(--s1);border-right:1px solid var(--border);
-  transform:translateX(-100%);transition:transform .38s cubic-bezier(.25,.46,.45,.94);
-  z-index:400;display:flex;flex-direction:column;
-}
+/* history panel */
+#history-panel{position:fixed;top:0;left:0;bottom:0;width:300px;background:var(--s1);border-right:1px solid var(--border);transform:translateX(-100%);transition:transform .38s cubic-bezier(.25,.46,.45,.94);z-index:400;display:flex;flex-direction:column}
 #history-panel.open{transform:translateX(0)}
-.hp-head{padding:20px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
-.hp-title{font-family:'DM Serif Display',serif;font-size:18px;color:var(--txt)}
+.hp-head{padding:18px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.hp-title{font-family:'DM Serif Display',serif;font-size:17px;color:var(--txt)}
 .hp-close{width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .2s}
 .hp-close:hover{border-color:var(--txt);color:var(--txt)}
-.hp-body{padding:16px 20px;overflow-y:auto;flex:1}
+.hp-body{padding:14px 16px;overflow-y:auto;flex:1}
 .hp-body::-webkit-scrollbar{width:3px}
 .hp-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.hp-empty{font-size:12px;color:var(--muted);line-height:1.6}
-.hp-game{background:var(--s2);border-radius:8px;padding:12px 14px;margin-bottom:10px;cursor:pointer;transition:background .2s;border:1px solid transparent}
+.hp-empty{font-size:12px;color:var(--muted);line-height:1.7}
+.hp-game{background:var(--s2);border-radius:8px;padding:11px 13px;margin-bottom:8px;cursor:pointer;transition:background .2s;border:1px solid transparent}
 .hp-game:hover{background:var(--s3);border-color:var(--border)}
-.hp-game-teams{font-size:13px;color:var(--txt);font-weight:500;margin-bottom:4px}
-.hp-game-score{font-family:'DM Serif Display',serif;font-size:16px;color:var(--txt);margin-bottom:6px}
-.hp-game-date{font-size:10px;color:var(--muted);margin-bottom:8px}
-.hp-game-stats{display:flex;flex-wrap:wrap;gap:5px}
-.hp-stat-chip{font-size:9px;padding:2px 7px;border-radius:20px;border:1px solid;letter-spacing:.03em}
-.hp-detail{background:var(--s3);border-radius:6px;padding:10px;margin-top:-4px;margin-bottom:10px;display:none}
+.hp-game-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px}
+.hp-game-teams{font-size:12px;color:var(--txt);font-weight:500}
+.hp-game-score{font-family:'DM Serif Display',serif;font-size:15px;color:var(--txt)}
+.hp-game-date{font-size:10px;color:var(--muted);margin-bottom:7px}
+.hp-game-chips{display:flex;flex-wrap:wrap;gap:4px}
+.hp-chip{font-size:9px;padding:2px 7px;border-radius:20px;border:1px solid;letter-spacing:.03em}
+.hp-detail{background:var(--s3);border-radius:6px;padding:10px;margin-top:2px;margin-bottom:8px;display:none}
 .hp-detail.open{display:block}
-.hp-detail-title{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:6px}
+.hp-detail-title{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:7px}
 .hp-bar-row{display:flex;align-items:center;gap:7px;margin-bottom:4px}
-.hp-bar-wrap{flex:1;height:3px;background:rgba(128,128,128,.2);border-radius:2px;overflow:hidden}
-.hp-bar-fill{height:100%;border-radius:2px}
-.hp-bar-label{font-size:10px;color:var(--txt);width:80px;flex-shrink:0}
-.hp-bar-pct{font-size:10px;color:var(--muted);width:30px;text-align:right;flex-shrink:0}
+.hp-bar-wrap{flex:1;height:3px;background:rgba(128,128,128,.15);border-radius:2px;overflow:hidden}
+.hp-bar-fill{height:100%;border-radius:2px;transition:width .6s ease}
+.hp-bar-label{font-size:10px;color:var(--txt);width:90px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hp-bar-pct{font-size:10px;color:var(--muted);width:28px;text-align:right;flex-shrink:0}
 
-/* SIDEBAR */
+/* sidebar */
 #sidebar{position:fixed;top:0;right:0;width:350px;height:100vh;background:var(--s1);border-left:1px solid var(--border);transform:translateX(100%);transition:transform .38s cubic-bezier(.25,.46,.45,.94);z-index:300;display:flex;flex-direction:column}
 #sidebar.open{transform:translateX(0)}
-.sb-head{padding:22px 22px 14px;border-bottom:1px solid var(--border);flex-shrink:0;position:relative}
-.sb-x{position:absolute;top:14px;right:14px;width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .2s}
+.sb-head{padding:20px 20px 13px;border-bottom:1px solid var(--border);flex-shrink:0;position:relative}
+.sb-x{position:absolute;top:13px;right:13px;width:26px;height:26px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .2s}
 .sb-x:hover{border-color:var(--txt);color:var(--txt)}
-.c-flag{font-size:38px;display:block;margin-bottom:8px}
-.c-name{font-family:'DM Serif Display',serif;font-size:25px;line-height:1.1;margin-bottom:3px;color:var(--txt)}
+.c-flag{font-size:36px;display:block;margin-bottom:7px}
+.c-name{font-family:'DM Serif Display',serif;font-size:24px;line-height:1.1;margin-bottom:3px;color:var(--txt)}
 .c-region{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
 .debut{display:inline-block;margin-top:6px;padding:2px 8px;background:var(--acc2);border:1px solid rgba(200,240,77,.35);border-radius:20px;font-size:9px;color:var(--acc);text-transform:uppercase;letter-spacing:.1em;font-weight:500}
-.sb-body{padding:18px 22px;overflow-y:auto;flex:1}
+.sb-body{padding:16px 20px;overflow-y:auto;flex:1}
 .sb-body::-webkit-scrollbar{width:3px}
 .sb-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-.hook{font-size:13px;line-height:1.72;margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border);color:var(--txt)}
-.iw{margin-bottom:20px}
+.hook{font-size:13px;line-height:1.72;margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid var(--border);color:var(--txt)}
+.iw{margin-bottom:18px}
 .il{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
 .it{height:2px;background:var(--s3);border-radius:1px;overflow:hidden}
 .if{height:100%;border-radius:1px;transition:width 1.2s cubic-bezier(.25,.46,.45,.94);width:0}
 .in{margin-top:5px;font-size:10px;color:var(--muted)}
-.drows{margin-bottom:16px}
-.dr{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);gap:12px}
+.drows{margin-bottom:14px}
+.dr{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);gap:12px}
 .dl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;flex-shrink:0}
 .dv{font-size:12px;text-align:right;line-height:1.4;color:var(--txt)}
-.copa-box{background:var(--s2);border-radius:6px;padding:12px;margin-bottom:16px}
-.copa-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--acc);font-weight:500;margin-bottom:5px}
+.copa-box{background:var(--s2);border-radius:6px;padding:11px;margin-bottom:14px}
+.copa-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--acc);font-weight:500;margin-bottom:4px}
 .copa-txt{font-size:12px;line-height:1.5;color:var(--txt)}
-.extra{font-size:12px;color:var(--muted);line-height:1.65;font-style:italic;margin-bottom:20px}
-.squad-section{border-top:1px solid var(--border);padding-top:16px}
-.squad-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+.extra{font-size:12px;color:var(--muted);line-height:1.65;font-style:italic;margin-bottom:18px}
+.squad-section{border-top:1px solid var(--border);padding-top:14px}
+.squad-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
 .squad-title{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--acc);font-weight:500}
 .coach-line{font-size:11px;color:var(--muted)}.coach-name{color:var(--txt)}
-.squad-group{margin-bottom:10px}
-.squad-pos{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:5px}
-.squad-players{display:flex;flex-wrap:wrap;gap:4px}
-.player-tag{font-size:10px;padding:3px 7px;background:var(--s2);border-radius:4px;line-height:1.3;color:var(--txt)}
+.squad-group{margin-bottom:9px}
+.squad-pos{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:4px}
+.squad-players{display:flex;flex-wrap:wrap;gap:3px}
+.player-tag{font-size:10px;padding:2px 6px;background:var(--s2);border-radius:4px;line-height:1.3;color:var(--txt)}
 
-#hint{position:fixed;bottom:165px;left:50%;transform:translateX(-50%);text-align:center;z-index:50;pointer-events:none;transition:opacity .4s}
+#hint{position:fixed;bottom:155px;left:50%;transform:translateX(-50%);text-align:center;z-index:50;pointer-events:none;transition:opacity .4s}
 #hint.gone{opacity:0}
-.hm{font-family:'DM Serif Display',serif;font-size:13px;margin-bottom:3px;color:var(--txt)}
+.hm{font-family:'DM Serif Display',serif;font-size:13px;margin-bottom:2px;color:var(--txt)}
 .hs{font-size:10px;color:var(--muted)}
 </style>
 </head>
 <body>
-
 <header>
   <div>
     <div class="logo">Wake Up <span>Map</span></div>
@@ -199,12 +180,13 @@ body.light .country.participating:hover{fill:#adc0dc}
   <div class="hdr-right">
     <div class="legend-txt"><span class="pdot"></span>This map doesn't show who's winning.<br>It shows who the world is discovering.</div>
     <div class="hdr-controls">
+      <span id="trends-status">Trends loading</span>
       <button class="hist-btn" onclick="toggleHistory()">&#128337; History</button>
       <div class="mode-toggle">
         <button class="mt-btn active" id="btn-live" onclick="setMode('live')">Live</button>
         <button class="mt-btn" id="btn-heat" onclick="setMode('heat')">Heat Map</button>
       </div>
-      <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">&#9728;</button>
+      <button class="icon-btn" id="theme-btn" onclick="toggleTheme()">&#9728;</button>
     </div>
   </div>
 </header>
@@ -217,7 +199,7 @@ body.light .country.participating:hover{fill:#adc0dc}
     <button class="hp-close" onclick="closeHistory()">&#215;</button>
   </div>
   <div class="hp-body" id="hp-body">
-    <p class="hp-empty">No match history yet.<br>History builds as you watch live matches on Wake Up Map.</p>
+    <p class="hp-empty">No match history yet.<br><br>History builds automatically as you watch live matches on Wake Up Map.</p>
   </div>
 </div>
 
@@ -230,7 +212,7 @@ body.light .country.participating:hover{fill:#adc0dc}
 <svg id="world-map" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <filter id="heat-blur" x="-100%" y="-100%" width="300%" height="300%">
-      <feGaussianBlur stdDeviation="4"/>
+      <feGaussianBlur stdDeviation="3.5"/>
     </filter>
   </defs>
   <g id="countries-layer">
@@ -418,25 +400,25 @@ body.light .country.participating:hover{fill:#adc0dc}
   <div id="match-bar">
     <span class="live-badge hidden" id="live-badge">Live</span>
     <div class="match-teams">
-      <div class="mt"><span class="mflag" id="mb-hflag">&#127463;&#127479;</span><span class="mname" id="mb-hname">Brazil</span></div>
+      <div class="mt"><span class="mflag" id="mb-hflag"></span><span class="mname" id="mb-hname">Loading</span></div>
       <span class="mscore" id="mb-score">vs</span>
-      <div class="mt"><span class="mname" id="mb-aname">Morocco</span><span class="mflag" id="mb-aflag">&#127474;&#127462;</span></div>
+      <div class="mt"><span class="mname" id="mb-aname">Loading</span><span class="mflag" id="mb-aflag"></span></div>
       <span class="mtime" id="mb-minute"></span>
     </div>
     <span id="match-clock" style="display:none">00:00</span>
-    <div class="match-ctx" id="mb-ctx">Loading live data...</div>
+    <div class="match-ctx" id="mb-ctx">Loading...</div>
     <div id="match-extra"></div>
   </div>
   <div id="match-summary">
-    <div class="summary-title">Match summary &mdash; search interest</div>
+    <div class="summary-title">Match summary &#8212; search interest</div>
     <div class="summary-stats" id="summary-content"></div>
   </div>
   <div id="insight-bar">
     <span class="insight-label">Now</span>
-    <span id="insight-text">Loading...</span>
+    <span id="insight-text"></span>
     <div class="insight-chips" id="chips"></div>
   </div>
-  <div id="chart-wrap">
+  <div id="chart-wrap" class="hidden">
     <div class="chart-title">Search interest throughout the match</div>
     <canvas id="chart-canvas"></canvas>
   </div>
@@ -477,7 +459,7 @@ body.light .country.participating:hover{fill:#adc0dc}
 
 <div id="hint">
   <div class="hm">Click any participating country</div>
-  <div class="hs">Scroll to zoom &middot; Drag to move</div>
+  <div class="hs">Scroll to zoom &#183; Drag to move</div>
 </div>
 
 <script>
@@ -783,440 +765,335 @@ const DATA = {
   newzealand:{flag:"🇳🇿",name:"Nova Zelândia",region:"Oceania",debut:false,hook:"A Nova Zelândia foi um dos últimos lugares habitados por humanos — os maoris chegaram por volta do século XIII, apenas 700 anos atrás.",loc:"Pacífico Sul, a mais de 2.000 km da Austrália",pop:"~5 milhões",lang:"Inglês, maori e língua de sinais (3 oficiais)",copa:"Copa 2026.",extra:"Primeiro país do mundo a dar às mulheres direito de voto, em 1893.",interest:62}
 };
 
-var usingRealData = false;
-var realAwayShare = 0.5;
-var realHomeShare = 0.5;
-var MATCH = {home:'brazil',away:'morocco',homeName:'Brazil',awayName:'Morocco',homeFlag:'BR',awayFlag:'MA',score:'vs',minute:0,status:'TIMED'};
-MATCH.homeFlag = String.fromCodePoint(0x1F1E7,0x1F1F7);
-MATCH.awayFlag = String.fromCodePoint(0x1F1F2,0x1F1E6);
+// ─── STATE ────────────────────────────────────────────────────
+var usingRealTrends = false;
+var realShares = {}; // {countryId: 0-100}
+var MATCH = {
+  home:'brazil', away:'morocco',
+  homeName:'Brazil', awayName:'Morocco',
+  homeFlag:'', awayFlag:'',
+  score:'vs', minute:0, status:'TIMED'
+};
 var nextMatch = null;
 var lastMatch = null;
+var matchIsLive = false;
 
-// ─── HISTORY (localStorage) ───────────────────────────────────
+// ─── HISTORY ──────────────────────────────────────────────────
 var gameHistory = [];
-try {
-  var stored = localStorage.getItem('wakeupmap_history');
-  if (stored) gameHistory = JSON.parse(stored);
-} catch(e) {}
+try { var s=localStorage.getItem('wum_history'); if(s) gameHistory=JSON.parse(s); } catch(e) {}
+function saveHistory(){ try{localStorage.setItem('wum_history',JSON.stringify(gameHistory.slice(-50)));}catch(e){} }
 
-function saveHistory() {
-  try { localStorage.setItem('wakeupmap_history', JSON.stringify(gameHistory.slice(-50))); } catch(e) {}
-}
-
-var currentGameData = null; // accumulates data for current live game
-
-function startGameTracking(match) {
-  currentGameData = {
-    id: match.home + '_' + match.away + '_' + new Date().toDateString(),
-    home: match.home, away: match.away,
-    homeName: match.homeName, awayName: match.awayName,
-    homeFlag: match.homeFlag, awayFlag: match.awayFlag,
-    score: match.score,
-    date: new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),
-    topSearched: {},
-    peakCountry: null, peakVal: 0,
-    timeline: []
+var tracking = null;
+function startTracking(m){
+  var id = m.home+'_'+m.away+'_'+new Date().toDateString();
+  if(tracking && tracking.id===id) return;
+  tracking = {
+    id:id, home:m.home, away:m.away,
+    homeName:m.homeName, awayName:m.awayName,
+    homeFlag:m.homeFlag, awayFlag:m.awayFlag,
+    score:m.score,
+    date:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}),
+    peak:{}, timeline:[]
   };
 }
-
-function updateGameTracking() {
-  if (!currentGameData) return;
-  currentGameData.score = MATCH.score;
-  // Record top searched countries
-  Object.entries(interestMap).forEach(function(e) {
-    var id = e[0], val = e[1];
-    if (!currentGameData.topSearched[id]) currentGameData.topSearched[id] = 0;
-    currentGameData.topSearched[id] = Math.max(currentGameData.topSearched[id], val);
-    if (val > currentGameData.peakVal) {
-      currentGameData.peakVal = val;
-      currentGameData.peakCountry = id;
-    }
+function updateTracking(){
+  if(!tracking) return;
+  tracking.score = MATCH.score;
+  Object.entries(interestMap).forEach(function(e){
+    var id=e[0],val=e[1];
+    if(!tracking.peak[id]||val>tracking.peak[id]) tracking.peak[id]=val;
   });
-  if (history[MATCH.home] && history[MATCH.home].length) {
-    currentGameData.timeline = history[MATCH.home].slice(-30).map(function(v,i) {
-      return {h:v, a:(history[MATCH.away]||[])[i]||0};
+  if((history[MATCH.home]||[]).length){
+    tracking.timeline = (history[MATCH.home]||[]).slice(-30).map(function(v,i){
+      return {h:v,a:((history[MATCH.away]||[])[i]||0)};
     });
   }
 }
-
-function finishGameTracking() {
-  if (!currentGameData) return;
-  updateGameTracking();
-  // Check if already saved
-  var exists = gameHistory.some(function(g) { return g.id === currentGameData.id; });
-  if (!exists) {
-    gameHistory.unshift(currentGameData);
-    saveHistory();
-  }
-  currentGameData = null;
+function finishTracking(){
+  if(!tracking) return;
+  updateTracking();
+  var exists = gameHistory.some(function(g){return g.id===tracking.id;});
+  if(!exists){ gameHistory.unshift(tracking); saveHistory(); }
+  tracking = null;
   renderHistory();
 }
 
-// ─── HISTORY PANEL UI ─────────────────────────────────────────
-function renderHistory() {
+// ─── HISTORY UI ───────────────────────────────────────────────
+function renderHistory(){
   var body = document.getElementById('hp-body');
-  if (!gameHistory.length) {
-    body.innerHTML = '<p class="hp-empty">No match history yet.<br>History builds as you watch live matches on Wake Up Map.</p>';
+  if(!gameHistory.length){
+    body.innerHTML='<p class="hp-empty">No match history yet.<br><br>History builds automatically as you watch live matches on Wake Up Map.</p>';
     return;
   }
-  body.innerHTML = '';
-  gameHistory.forEach(function(g, idx) {
-    var topEntries = Object.entries(g.topSearched).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
-    var total = topEntries.reduce(function(s,e){return s+e[1];},0.01);
-    var div = document.createElement('div');
-    div.className = 'hp-game';
-    div.innerHTML =
-      '<div class="hp-game-teams">'+g.homeFlag+' '+g.homeName+' vs '+g.awayName+' '+g.awayFlag+'</div>'+
-      '<div class="hp-game-score">'+g.score+'</div>'+
+  body.innerHTML='';
+  gameHistory.forEach(function(g,idx){
+    var entries=Object.entries(g.peak||{}).sort(function(a,b){return b[1]-a[1];}).slice(0,5);
+    var total=entries.reduce(function(s,e){return s+e[1];},0.01);
+
+    var div=document.createElement('div'); div.className='hp-game';
+    div.innerHTML='<div class="hp-game-header"><span class="hp-game-teams">'+(g.homeFlag||'')+' '+g.homeName+' vs '+g.awayName+' '+(g.awayFlag||'')+'</span><span class="hp-game-score">'+g.score+'</span></div>'+
       '<div class="hp-game-date">'+g.date+'</div>'+
-      '<div class="hp-game-stats">'+
-        topEntries.slice(0,3).map(function(e) {
-          var col = COLORS[e[0]]||'#888';
-          return '<span class="hp-stat-chip" style="border-color:'+col+';color:'+col+'">'+
-            (NAMES[e[0]]||e[0])+' '+(Math.round(e[1]/total*100))+'%</span>';
-        }).join('')+
-      '</div>';
-    div.addEventListener('click', function() {
-      var detail = document.getElementById('hp-detail-'+idx);
-      if (detail) detail.classList.toggle('open');
+      '<div class="hp-game-chips">'+entries.slice(0,3).map(function(e){
+        var col=COLORS[e[0]]||'#888';
+        return '<span class="hp-chip" style="border-color:'+col+';color:'+col+'">'+(NAMES[e[0]]||e[0])+' '+Math.round(e[1]/total*100)+'%</span>';
+      }).join('')+'</div>';
+    div.addEventListener('click',function(){
+      var det=document.getElementById('hpd-'+idx);
+      if(det) det.classList.toggle('open');
     });
 
-    var detail = document.createElement('div');
-    detail.className = 'hp-detail';
-    detail.id = 'hp-detail-'+idx;
-    detail.innerHTML = '<div class="hp-detail-title">Most searched during this match</div>'+
-      topEntries.map(function(e) {
-        var pct = Math.round(e[1]/total*100);
-        var col = COLORS[e[0]]||'#888';
-        return '<div class="hp-bar-row">'+
-          '<span class="hp-bar-label">'+(NAMES[e[0]]||e[0])+'</span>'+
+    var det=document.createElement('div'); det.className='hp-detail'; det.id='hpd-'+idx;
+    det.innerHTML='<div class="hp-detail-title">Countries most searched during this match</div>'+
+      entries.map(function(e){
+        var pct=Math.round(e[1]/total*100); var col=COLORS[e[0]]||'#888';
+        return '<div class="hp-bar-row"><span class="hp-bar-label">'+(NAMES[e[0]]||e[0])+'</span>'+
           '<div class="hp-bar-wrap"><div class="hp-bar-fill" style="width:'+pct+'%;background:'+col+'"></div></div>'+
           '<span class="hp-bar-pct">'+pct+'%</span></div>';
       }).join('');
 
-    body.appendChild(div);
-    body.appendChild(detail);
+    body.appendChild(div); body.appendChild(det);
   });
 }
-
-function toggleHistory() {
-  var p = document.getElementById('history-panel');
-  p.classList.toggle('open');
-  if (p.classList.contains('open')) renderHistory();
-}
-window.toggleHistory = toggleHistory;
-window.closeHistory = function() { document.getElementById('history-panel').classList.remove('open'); };
+function toggleHistory(){ var p=document.getElementById('history-panel'); p.classList.toggle('open'); if(p.classList.contains('open'))renderHistory(); }
+function closeHistory(){ document.getElementById('history-panel').classList.remove('open'); }
+window.toggleHistory=toggleHistory; window.closeHistory=closeHistory;
 
 // ─── COUNTDOWN ────────────────────────────────────────────────
-function formatCountdown(ms) {
-  if (ms <= 0) return 'Starting soon';
-  var s = Math.floor(ms/1000);
-  var h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
-  if (h > 0) return h+'h '+m+'m';
-  if (m > 0) return m+'m '+sec+'s';
-  return sec+'s';
+var countdownInterval=null;
+function fmtCountdown(ms){
+  if(ms<=0) return 'Starting soon';
+  var s=Math.floor(ms/1000),h=Math.floor(s/3600),m=Math.floor((s%3600)/60),sec=s%60;
+  if(h>0) return h+'h '+m+'m'; if(m>0) return m+'m '+sec+'s'; return sec+'s';
+}
+function startCountdown(ts){
+  if(countdownInterval)clearInterval(countdownInterval);
+  countdownInterval=setInterval(function(){
+    var el=document.getElementById('countdown'); if(el) el.textContent=fmtCountdown(new Date(ts)-Date.now());
+  },1000);
 }
 
-var countdownInterval = null;
-function startCountdown(targetTime) {
-  if (countdownInterval) clearInterval(countdownInterval);
-  countdownInterval = setInterval(function() {
-    var el = document.getElementById('countdown');
-    if (el) el.textContent = formatCountdown(targetTime - Date.now());
-  }, 1000);
-}
+// ─── MATCH BAR ────────────────────────────────────────────────
+function updateMatchBar(){
+  var isLive = MATCH.status==='IN_PLAY'||MATCH.status==='PAUSED';
+  var isDone = MATCH.status==='FINISHED';
+  matchIsLive = isLive;
 
-// ─── MATCH BAR UPDATE ─────────────────────────────────────────
-function updateMatchBar() {
-  var liveBadge = document.getElementById('live-badge');
-  var scoreEl = document.getElementById('mb-score');
-  var minuteEl = document.getElementById('mb-minute');
-  var clockEl = document.getElementById('match-clock');
-  var ctxEl = document.getElementById('mb-ctx');
-  var extraEl = document.getElementById('match-extra');
+  document.getElementById('mb-hflag').textContent=MATCH.homeFlag||'';
+  document.getElementById('mb-hname').textContent=MATCH.homeName;
+  document.getElementById('mb-aflag').textContent=MATCH.awayFlag||'';
+  document.getElementById('mb-aname').textContent=MATCH.awayName;
+  document.getElementById('mb-score').textContent=MATCH.score;
+  document.getElementById('mb-minute').textContent=isLive&&MATCH.minute?MATCH.minute+"'":'';
+  document.getElementById('live-badge').classList.toggle('hidden',!isLive);
 
-  var isLive = MATCH.status === 'IN_PLAY' || MATCH.status === 'PAUSED';
-  var isFinished = MATCH.status === 'FINISHED';
+  var clockEl=document.getElementById('match-clock');
+  var chartWrap=document.getElementById('chart-wrap');
+  var summaryEl=document.getElementById('match-summary');
+  var ctxEl=document.getElementById('mb-ctx');
+  var extraEl=document.getElementById('match-extra');
 
-  document.getElementById('mb-hflag').textContent = MATCH.homeFlag;
-  document.getElementById('mb-hname').textContent = MATCH.homeName;
-  document.getElementById('mb-aflag').textContent = MATCH.awayFlag;
-  document.getElementById('mb-aname').textContent = MATCH.awayName;
-  scoreEl.textContent = MATCH.score;
-  minuteEl.textContent = isLive && MATCH.minute ? MATCH.minute+"'" : '';
-  liveBadge.classList.toggle('hidden', !isLive);
-
-  if (isLive) {
-    clockEl.style.display = 'inline';
-    ctxEl.textContent = MATCH.status === 'PAUSED' ? 'Half time' : 'Live match — global searches spiking';
-    extraEl.innerHTML = '';
-    // Start tracking
-    if (!currentGameData) startGameTracking(MATCH);
-  } else if (isFinished) {
-    clockEl.style.display = 'none';
-    ctxEl.textContent = 'Match finished';
-    // Finish tracking
-    if (currentGameData) finishGameTracking();
-    // Show post-match summary
-    showPostMatchSummary();
-    // Show next match info
-    if (nextMatch) {
-      var nm = nextMatch;
-      extraEl.innerHTML = '<strong>Next:</strong> '+nm.homeFlag+' '+nm.homeName+' vs '+nm.awayName+' '+nm.awayFlag+
-        ' &nbsp;·&nbsp; <span id="countdown">'+formatCountdown(new Date(nm.utcDate)-Date.now())+'</span>';
-      startCountdown(new Date(nm.utcDate));
-    } else {
-      extraEl.innerHTML = '';
-    }
+  if(isLive){
+    clockEl.style.display='inline';
+    chartWrap.classList.remove('hidden');
+    summaryEl.classList.remove('visible');
+    ctxEl.textContent=MATCH.status==='PAUSED'?'Half time':'Live match';
+    extraEl.innerHTML='';
+    startTracking(MATCH);
+  } else if(isDone){
+    clockEl.style.display='none';
+    chartWrap.classList.add('hidden');
+    summaryEl.classList.add('visible');
+    ctxEl.textContent='Match finished';
+    finishTracking();
+    renderPostMatch();
+    if(nextMatch){
+      extraEl.innerHTML='<strong>Next:</strong> '+(nextMatch.homeFlag||'')+' '+nextMatch.homeName+' vs '+nextMatch.awayName+' '+(nextMatch.awayFlag||'')+
+        ' &nbsp;&middot;&nbsp; <span id="countdown">'+fmtCountdown(new Date(nextMatch.utcDate)-Date.now())+'</span>';
+      startCountdown(nextMatch.utcDate);
+    } else { extraEl.innerHTML=''; }
   } else {
-    // TIMED / SCHEDULED
-    clockEl.style.display = 'none';
-    if (lastMatch) {
-      var lm = lastMatch;
-      var nInfo = nextMatch ?
-        ' &nbsp;·&nbsp; <strong>Next:</strong> '+nextMatch.homeFlag+' '+nextMatch.homeName+' vs '+nextMatch.awayName+' '+nextMatch.awayFlag+
-        ' <span id="countdown">'+formatCountdown(new Date(nextMatch.utcDate)-Date.now())+'</span>' : '';
-      ctxEl.textContent = '';
-      extraEl.innerHTML = '<strong>Last:</strong> '+lm.homeFlag+' '+lm.homeName+' '+lm.score+' '+lm.awayName+' '+lm.awayFlag + nInfo;
-      if (nextMatch) startCountdown(new Date(nextMatch.utcDate));
-    } else {
-      ctxEl.textContent = nextMatch ? 'Next match coming up' : 'Loading match data...';
-      extraEl.innerHTML = '';
+    // TIMED
+    clockEl.style.display='none';
+    chartWrap.classList.add('hidden');
+    summaryEl.classList.remove('visible');
+    ctxEl.textContent='';
+    var info='';
+    if(lastMatch) info='<strong>Last:</strong> '+(lastMatch.homeFlag||'')+' '+lastMatch.homeName+' '+lastMatch.score+' '+lastMatch.awayName+' '+(lastMatch.awayFlag||'');
+    if(nextMatch){
+      if(info) info+=' &nbsp;&middot;&nbsp; ';
+      info+='<strong>Next:</strong> '+(nextMatch.homeFlag||'')+' '+nextMatch.homeName+' vs '+nextMatch.awayName+' '+(nextMatch.awayFlag||'')+
+        ' <span id="countdown">'+fmtCountdown(new Date(nextMatch.utcDate)-Date.now())+'</span>';
+      startCountdown(nextMatch.utcDate);
     }
+    extraEl.innerHTML=info||'Loading match data...';
   }
 }
 
-// ─── POST-MATCH SUMMARY ───────────────────────────────────────
-function showPostMatchSummary() {
-  var el = document.getElementById('match-summary');
-  if (!el) return;
-  var topEntries = Object.entries(interestMap).filter(function(e){return e[1]>0;}).sort(function(a,b){return b[1]-a[1];});
-  if (!topEntries.length) { el.classList.remove('visible'); return; }
-  var top = topEntries[0];
-  var total = topEntries.reduce(function(s,e){return s+e[1];},0.01);
-  var homeVal = interestMap[MATCH.home]||0, awayVal = interestMap[MATCH.away]||0;
-  var homePct = Math.round(homeVal/total*100), awayPct = Math.round(awayVal/total*100);
-  el.classList.add('visible');
-  document.getElementById('summary-content').innerHTML =
+function renderPostMatch(){
+  var entries=Object.entries(interestMap).filter(function(e){return e[1]>0;}).sort(function(a,b){return b[1]-a[1];});
+  if(!entries.length){document.getElementById('match-summary').classList.remove('visible');return;}
+  var total=entries.reduce(function(s,e){return s+e[1];},0.01);
+  var top=entries[0];
+  var hp=Math.round((interestMap[MATCH.home]||0)/total*100);
+  var ap=Math.round((interestMap[MATCH.away]||0)/total*100);
+  document.getElementById('summary-content').innerHTML=
     '<span class="stat-item">Most searched: <span>'+(NAMES[top[0]]||top[0])+'</span></span>'+
-    '<span class="stat-item">'+MATCH.homeName+' interest: <span>'+homePct+'%</span></span>'+
-    '<span class="stat-item">'+MATCH.awayName+' interest: <span>'+awayPct+'%</span></span>'+
-    '<span class="stat-item">Countries tracked: <span>'+topEntries.length+'</span></span>';
+    '<span class="stat-item">'+MATCH.homeName+': <span>'+hp+'%</span></span>'+
+    '<span class="stat-item">'+MATCH.awayName+': <span>'+ap+'%</span></span>'+
+    '<span class="stat-item">Countries tracked: <span>'+entries.length+'</span></span>';
 }
 
-// ─── GOOGLE TRENDS (browser) ──────────────────────────────────
-var kwMap = {
-  brazil:'Brazil',morocco:'Morocco',france:'France',germany:'Germany',
-  spain:'Spain',england:'England',argentina:'Argentina',usa:'United States',
-  japan:'Japan',southkorea:'South Korea',portugal:'Portugal',
-  netherlands:'Netherlands',mexico:'Mexico',colombia:'Colombia',
-  turkey:'Turkey',australia:'Australia',czechia:'Czechia',czech:'Czechia',
-  senegal:'Senegal',ghana:'Ghana',southafrica:'South Africa',
-  algeria:'Algeria',egypt:'Egypt',uruguay:'Uruguay',ecuador:'Ecuador',
-  canada:'Canada',italy:'Italy',serbia:'Serbia',croatia:'Croatia'
-};
-
-async function fetchTrendsBrowser(home, away) {
+// ─── TRENDS — server-side via /api/trends ─────────────────────
+var trendsRetryMs = 60000;
+async function fetchTrends(home, away){
   try {
-    var kw1 = (kwMap[home]||home)+' World Cup';
-    var kw2 = (kwMap[away]||away)+' World Cup';
-    var extras = ['France World Cup','Germany World Cup','Spain World Cup'];
-    var allKw = [kw1,kw2].concat(extras).slice(0,5);
-    var reqObj = {
-      comparisonItem: allKw.map(function(k){return {keyword:k,geo:'',time:'now 1-H'};}),
-      category:0, property:''
-    };
-    var exploreUrl = 'https://trends.google.com/trends/api/explore?hl=en-US&tz=-60&req='+encodeURIComponent(JSON.stringify(reqObj));
-    var proxy = 'https://api.allorigins.win/get?url='+encodeURIComponent(exploreUrl);
-    var r1 = await fetch(proxy, {signal:AbortSignal.timeout(10000)});
-    if (!r1.ok) return;
-    var j1 = await r1.json();
-    if (!j1.contents) return;
-    var txt = j1.contents;
-    var jsonStart = txt.indexOf('{');
-    if (jsonStart < 0) return;
-    var data = JSON.parse(txt.slice(jsonStart));
-    var widgets = data.widgets||[];
-    var tsWidget = null;
-    for (var i=0;i<widgets.length;i++){if(widgets[i].id==='TIMESERIES'){tsWidget=widgets[i];break;}}
-    if (!tsWidget) return;
-    var dataUrl = 'https://trends.google.com/trends/api/widgetdata/multiline?hl=en-US&tz=-60&req='+encodeURIComponent(JSON.stringify(tsWidget.request))+'&token='+encodeURIComponent(tsWidget.token)+'&geo=';
-    var proxy2 = 'https://api.allorigins.win/get?url='+encodeURIComponent(dataUrl);
-    var r2 = await fetch(proxy2, {signal:AbortSignal.timeout(10000)});
-    if (!r2.ok) return;
-    var j2 = await r2.json();
-    if (!j2.contents) return;
-    var txt2 = j2.contents;
-    var j2start = txt2.indexOf('{');
-    if (j2start < 0) return;
-    var trendsData = JSON.parse(txt2.slice(j2start));
-    var lines = ((trendsData.default||{}).timelineData)||[];
-    if (!lines.length) return;
-    var latest = lines[lines.length-1];
-    var values = latest.value||[];
-    var ids = [home,away,'france','germany','spain'].slice(0,values.length);
-    var changed = false;
-    ids.forEach(function(id,i){
-      if(typeof values[i]==='number'){interestMap[id]=values[i];changed=true;}
-    });
-    if (changed && values.length >= 2) {
-      var hv=values[0]||0, av=values[1]||0, tot=hv+av+0.01;
-      realHomeShare=hv/tot; realAwayShare=av/tot;
-      usingRealData=true;
-      updateInsight(); updateRanking();
-      console.log('Trends OK:', ids.map(function(id,i){return id+':'+values[i];}).join(', '));
-    }
-  } catch(e) { console.log('Trends:', e.message); }
-}
-
-// ─── FOOTBALL API ─────────────────────────────────────────────
-var FLAG_EMOJI = {
-  brazil:String.fromCodePoint(0x1F1E7,0x1F1F7),
-  morocco:String.fromCodePoint(0x1F1F2,0x1F1E6),
-  france:String.fromCodePoint(0x1F1EB,0x1F1F7),
-  germany:String.fromCodePoint(0x1F1E9,0x1F1EA),
-  spain:String.fromCodePoint(0x1F1EA,0x1F1F8),
-  england:String.fromCodePoint(0x1F3F4),
-  portugal:String.fromCodePoint(0x1F1F5,0x1F1F9),
-  argentina:String.fromCodePoint(0x1F1E6,0x1F1F7),
-  netherlands:String.fromCodePoint(0x1F1F3,0x1F1F1),
-  belgium:String.fromCodePoint(0x1F1E7,0x1F1EA),
-  croatia:String.fromCodePoint(0x1F1ED,0x1F1F7),
-  usa:String.fromCodePoint(0x1F1FA,0x1F1F8),
-  canada:String.fromCodePoint(0x1F1E8,0x1F1E6),
-  mexico:String.fromCodePoint(0x1F1F2,0x1F1FD),
-  japan:String.fromCodePoint(0x1F1EF,0x1F1F5),
-  southkorea:String.fromCodePoint(0x1F1F0,0x1F1F7),
-  australia:String.fromCodePoint(0x1F1E6,0x1F1FA),
-  senegal:String.fromCodePoint(0x1F1F8,0x1F1F3),
-  ghana:String.fromCodePoint(0x1F1EC,0x1F1ED),
-  ivory:String.fromCodePoint(0x1F1E8,0x1F1EE),
-  southafrica:String.fromCodePoint(0x1F1FF,0x1F1E6),
-  algeria:String.fromCodePoint(0x1F1E9,0x1F1FF),
-  egypt:String.fromCodePoint(0x1F1EA,0x1F1EC),
-  tunisia:String.fromCodePoint(0x1F1F9,0x1F1F3),
-  iran:String.fromCodePoint(0x1F1EE,0x1F1F7),
-  saudi:String.fromCodePoint(0x1F1F8,0x1F1E6),
-  qatar:String.fromCodePoint(0x1F1F6,0x1F1E6),
-  jordan:String.fromCodePoint(0x1F1EF,0x1F1F4),
-  uzbekistan:String.fromCodePoint(0x1F1FA,0x1F1FF),
-  uruguay:String.fromCodePoint(0x1F1FA,0x1F1FE),
-  ecuador:String.fromCodePoint(0x1F1EA,0x1F1E8),
-  paraguay:String.fromCodePoint(0x1F1F5,0x1F1FE),
-  panama:String.fromCodePoint(0x1F1F5,0x1F1E6),
-  haiti:String.fromCodePoint(0x1F1ED,0x1F1F9),
-  curacao:String.fromCodePoint(0x1F1E8,0x1F1FC),
-  caboverde:String.fromCodePoint(0x1F1E8,0x1F1FB),
-  colombia:String.fromCodePoint(0x1F1E8,0x1F1F4),
-  scotland:String.fromCodePoint(0x1F3F4),
-  turkey:String.fromCodePoint(0x1F1F9,0x1F1F7),
-  norway:String.fromCodePoint(0x1F1F3,0x1F1F4),
-  austria:String.fromCodePoint(0x1F1E6,0x1F1F9),
-  czech:String.fromCodePoint(0x1F1E8,0x1F1FF),
-  czechia:String.fromCodePoint(0x1F1E8,0x1F1FF),
-  bosnia:String.fromCodePoint(0x1F1E7,0x1F1E6),
-  sweden:String.fromCodePoint(0x1F1F8,0x1F1EA),
-  newzealand:String.fromCodePoint(0x1F1F3,0x1F1FF),
-};
-
-async function fetchMatch() {
-  try {
-    var res = await fetch('/api/index', {signal:AbortSignal.timeout(8000)});
-    if (!res.ok) return;
+    var url = '/api/trends?home='+encodeURIComponent(home)+'&away='+encodeURIComponent(away);
+    var res = await fetch(url, {signal:AbortSignal.timeout(15000)});
+    if(!res.ok) throw new Error('HTTP '+res.status);
     var d = await res.json();
-    if (d.match && !d.match.error) {
-      var m = d.match;
-      var wasLive = MATCH.status === 'IN_PLAY' || MATCH.status === 'PAUSED';
-      MATCH.home = m.home||MATCH.home;
-      MATCH.away = m.away||MATCH.away;
-      MATCH.homeName = m.homeName||MATCH.homeName;
-      MATCH.awayName = m.awayName||MATCH.awayName;
-      MATCH.homeFlag = FLAG_EMOJI[m.home]||m.homeFlag||MATCH.homeFlag;
-      MATCH.awayFlag = FLAG_EMOJI[m.away]||m.awayFlag||MATCH.awayFlag;
-      MATCH.score = m.score||MATCH.score;
-      MATCH.minute = m.minute||0;
-      MATCH.status = m.status||'TIMED';
-      if (m.minute > 0 && MATCH.status === 'IN_PLAY') {
-        clockStart = Date.now() - m.minute*60*1000;
-      }
+
+    if(d._error){
+      setTrendsStatus('fail','Trends unavailable');
+      trendsRetryMs = Math.min(trendsRetryMs*2, 600000); // back off up to 10min
+      return;
     }
-    if (d.next) {
-      nextMatch = d.next;
-      nextMatch.homeFlag = FLAG_EMOJI[nextMatch.home]||'';
-      nextMatch.awayFlag = FLAG_EMOJI[nextMatch.away]||'';
+
+    var hasData = Object.keys(d).filter(function(k){return k!=='_error';}).length > 0;
+    if(!hasData){ setTrendsStatus('fail','No data'); return; }
+
+    // Update interest map with real data
+    Object.entries(d).forEach(function(e){
+      var id=e[0],val=e[1];
+      if(typeof val==='number') interestMap[id]=val;
+    });
+
+    var hv=d[home]||0, av=d[away]||0;
+    realShares[home]=hv; realShares[away]=av;
+    usingRealTrends=true;
+    trendsRetryMs=300000; // 5min normal interval
+
+    setTrendsStatus('live','Trends live');
+    updateInsight(); updateRanking();
+    console.log('Trends OK:', JSON.stringify(d));
+
+  } catch(e) {
+    setTrendsStatus('fail','Trends timeout');
+    console.log('Trends error:', e.message);
+  }
+}
+
+function setTrendsStatus(cls, txt){
+  var el=document.getElementById('trends-status');
+  if(!el) return;
+  el.className=''; el.classList.add(cls);
+  el.textContent=txt;
+}
+
+// ─── MATCH API ────────────────────────────────────────────────
+var FLAG_EMOJI = {};
+var flagCPs = [[0x1F1E7,0x1F1F7,'brazil'],[0x1F1F2,0x1F1E6,'morocco'],[0x1F1EB,0x1F1F7,'france'],
+  [0x1F1E9,0x1F1EA,'germany'],[0x1F1EA,0x1F1F8,'spain'],[0x1F1F5,0x1F1F9,'portugal'],
+  [0x1F1E6,0x1F1F7,'argentina'],[0x1F1FA,0x1F1F8,'usa'],[0x1F1F3,0x1F1F1,'netherlands'],
+  [0x1F1E7,0x1F1EA,'belgium'],[0x1F1ED,0x1F1F7,'croatia'],[0x1F1E8,0x1F1ED,'switzerland'],
+  [0x1F1FA,0x1F1FE,'uruguay'],[0x1F1E8,0x1F1F4,'colombia'],[0x1F1F2,0x1F1FD,'mexico'],
+  [0x1F1E8,0x1F1E6,'canada'],[0x1F1EF,0x1F1F5,'japan'],[0x1F1F0,0x1F1F7,'southkorea'],
+  [0x1F1E6,0x1F1FA,'australia'],[0x1F1EE,0x1F1F7,'iran'],[0x1F1F8,0x1F1E6,'saudi'],
+  [0x1F1F6,0x1F1E6,'qatar'],[0x1F1F8,0x1F1F3,'senegal'],[0x1F1EC,0x1F1ED,'ghana'],
+  [0x1F1E8,0x1F1EE,'ivory'],[0x1F1FF,0x1F1E6,'southafrica'],[0x1F1E9,0x1F1FF,'algeria'],
+  [0x1F1EA,0x1F1EC,'egypt'],[0x1F1F9,0x1F1F3,'tunisia'],[0x1F1EA,0x1F1E8,'ecuador'],
+  [0x1F1F5,0x1F1FE,'paraguay'],[0x1F1F5,0x1F1E6,'panama'],[0x1F1ED,0x1F1F9,'haiti'],
+  [0x1F1E8,0x1F1FC,'curacao'],[0x1F1E8,0x1F1FB,'caboverde'],[0x1F1EF,0x1F1F4,'jordan'],
+  [0x1F1FA,0x1F1FF,'uzbekistan'],[0x1F1F9,0x1F1F7,'turkey'],[0x1F1F3,0x1F1F4,'norway'],
+  [0x1F1E6,0x1F1F9,'austria'],[0x1F1E8,0x1F1FF,'czech'],[0x1F1E8,0x1F1FF,'czechia'],
+  [0x1F1E7,0x1F1E6,'bosnia'],[0x1F1F8,0x1F1EA,'sweden'],[0x1F1F3,0x1F1FF,'newzealand']];
+flagCPs.forEach(function(x){ FLAG_EMOJI[x[2]]=String.fromCodePoint(x[0],x[1]); });
+
+async function fetchMatch(){
+  try {
+    var res=await fetch('/api/index',{signal:AbortSignal.timeout(8000)});
+    if(!res.ok) return;
+    var d=await res.json();
+    if(d.match&&!d.match.error){
+      var m=d.match;
+      MATCH.home=m.home||MATCH.home;
+      MATCH.away=m.away||MATCH.away;
+      MATCH.homeName=m.homeName||MATCH.homeName;
+      MATCH.awayName=m.awayName||MATCH.awayName;
+      MATCH.homeFlag=FLAG_EMOJI[m.home]||MATCH.homeFlag;
+      MATCH.awayFlag=FLAG_EMOJI[m.away]||MATCH.awayFlag;
+      MATCH.score=m.score||MATCH.score;
+      MATCH.minute=m.minute||0;
+      MATCH.status=m.status||'TIMED';
+      if(MATCH.minute>0&&MATCH.status==='IN_PLAY') clockStart=Date.now()-MATCH.minute*60*1000;
     }
-    if (d.last) {
-      lastMatch = d.last;
-      lastMatch.homeFlag = FLAG_EMOJI[lastMatch.home]||'';
-      lastMatch.awayFlag = FLAG_EMOJI[lastMatch.away]||'';
+    if(d.next){
+      nextMatch=d.next;
+      nextMatch.homeFlag=FLAG_EMOJI[nextMatch.home]||'';
+      nextMatch.awayFlag=FLAG_EMOJI[nextMatch.away]||'';
+    }
+    if(d.last){
+      lastMatch=d.last;
+      lastMatch.homeFlag=FLAG_EMOJI[lastMatch.home]||'';
+      lastMatch.awayFlag=FLAG_EMOJI[lastMatch.away]||'';
     }
     updateMatchBar();
-  } catch(e) {}
+  } catch(e){}
 }
 
-async function fetchLiveData() {
+async function fetchLiveData(){
   await fetchMatch();
-  await fetchTrendsBrowser(MATCH.home, MATCH.away);
+  await fetchTrends(MATCH.home, MATCH.away);
 }
 
-// ─── SVG ZOOM/PAN ─────────────────────────────────────────────
-var SVG_W=1000,SVG_H=500;
-var svg=document.getElementById('world-map');
-var vx=0,vy=0,vw=SVG_W,vh=SVG_H;
-var MAX_ZOOM=8;
+// ─── ZOOM/PAN ─────────────────────────────────────────────────
+var SVG_W=1000,SVG_H=500,svg=document.getElementById('world-map');
+var vx=0,vy=0,vw=SVG_W,vh=SVG_H,MAX_ZOOM=8;
 function setViewBox(x,y,w,h){
-  w=Math.max(SVG_W/MAX_ZOOM,Math.min(SVG_W,w));
-  h=w*SVG_H/SVG_W; x=Math.max(0,Math.min(SVG_W-w,x)); y=Math.max(0,Math.min(SVG_H-h,y));
-  vx=x;vy=y;vw=w;vh=h;
-  svg.setAttribute('viewBox',x+' '+y+' '+w+' '+h);
+  w=Math.max(SVG_W/MAX_ZOOM,Math.min(SVG_W,w)); h=w*SVG_H/SVG_W;
+  x=Math.max(0,Math.min(SVG_W-w,x)); y=Math.max(0,Math.min(SVG_H-h,y));
+  vx=x;vy=y;vw=w;vh=h; svg.setAttribute('viewBox',x+' '+y+' '+w+' '+h);
 }
 svg.setAttribute('viewBox','0 0 '+SVG_W+' '+SVG_H);
 svg.setAttribute('preserveAspectRatio','xMidYMid meet');
 var mapWrap=document.getElementById('map-wrap');
 mapWrap.addEventListener('wheel',function(e){
   e.preventDefault();
-  var f=e.deltaY<0?1/1.18:1.18;
-  var newW=Math.max(SVG_W/MAX_ZOOM,Math.min(SVG_W,vw*f));
+  var f=e.deltaY<0?1/1.18:1.18,newW=Math.max(SVG_W/MAX_ZOOM,Math.min(SVG_W,vw*f));
   if(newW===vw)return;
   var rect=svg.getBoundingClientRect();
-  var mx=(e.clientX-rect.left)/rect.width*vw+vx;
-  var my=(e.clientY-rect.top)/rect.height*vh+vy;
-  var newH=newW*SVG_H/SVG_W;
-  setViewBox(mx-(e.clientX-rect.left)/rect.width*newW,my-(e.clientY-rect.top)/rect.height*newH,newW,newH);
+  var mx=(e.clientX-rect.left)/rect.width*vw+vx,my=(e.clientY-rect.top)/rect.height*vh+vy;
+  var nH=newW*SVG_H/SVG_W;
+  setViewBox(mx-(e.clientX-rect.left)/rect.width*newW,my-(e.clientY-rect.top)/rect.height*nH,newW,nH);
 },{passive:false});
-var dragging=false,dragSvgX=0,dragSvgY=0,dragMovedPx=0,dragCX=0,dragCY=0;
+var dragging=false,dSvgX=0,dSvgY=0,dMoved=0,dCX=0,dCY=0;
 mapWrap.addEventListener('mousedown',function(e){
-  if(e.button!==0)return; dragging=true;dragMovedPx=0;dragCX=e.clientX;dragCY=e.clientY;
-  var rect=svg.getBoundingClientRect();
-  dragSvgX=(e.clientX-rect.left)/rect.width*vw+vx;
-  dragSvgY=(e.clientY-rect.top)/rect.height*vh+vy;
+  if(e.button!==0)return; dragging=true; dMoved=0; dCX=e.clientX; dCY=e.clientY;
+  var r=svg.getBoundingClientRect();
+  dSvgX=(e.clientX-r.left)/r.width*vw+vx; dSvgY=(e.clientY-r.top)/r.height*vh+vy;
   mapWrap.classList.add('dragging');
 });
 window.addEventListener('mousemove',function(e){
   if(!dragging)return;
-  dragMovedPx=Math.max(dragMovedPx,Math.abs(e.clientX-dragCX)+Math.abs(e.clientY-dragCY));
-  var rect=svg.getBoundingClientRect();
-  var cx=(e.clientX-rect.left)/rect.width*vw+vx;
-  var cy=(e.clientY-rect.top)/rect.height*vh+vy;
-  setViewBox(vx+(dragSvgX-cx),vy+(dragSvgY-cy),vw,vh);
+  dMoved=Math.max(dMoved,Math.abs(e.clientX-dCX)+Math.abs(e.clientY-dCY));
+  var r=svg.getBoundingClientRect();
+  var cx=(e.clientX-r.left)/r.width*vw+vx,cy=(e.clientY-r.top)/r.height*vh+vy;
+  setViewBox(vx+(dSvgX-cx),vy+(dSvgY-cy),vw,vh);
 });
 window.addEventListener('mouseup',function(){dragging=false;mapWrap.classList.remove('dragging');});
 
 // ─── CITY SPAWN ───────────────────────────────────────────────
-function gaussian(){var u=0,v=0;while(u===0)u=Math.random();while(v===0)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
-function spawnPointForCountry(id){
+function gaussian(){var u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function spawnPoint(id){
   var c=CITIES[id];
   if(!c||!c.length){var ct=CENTROIDS[id];return ct?[ct[0]+(Math.random()-.5)*4,ct[1]+(Math.random()-.5)*3]:null;}
-  var tw=c.reduce(function(s,x){return s+x[2];},0);
-  var r=Math.random()*tw,city=c[0];
+  var tw=c.reduce(function(s,x){return s+x[2];},0),r=Math.random()*tw,city=c[0];
   for(var i=0;i<c.length;i++){r-=c[i][2];if(r<=0){city=c[i];break;}}
   return[city[0]+gaussian()*1.4,city[1]+gaussian()*1.1];
 }
 
 // ─── MODE ─────────────────────────────────────────────────────
 var mode='live';
-var heatLayer=document.getElementById('heat-layer');
-var partLayer=document.getElementById('particle-layer');
+var heatLayer=document.getElementById('heat-layer'),partLayer=document.getElementById('particle-layer');
 function setMode(m){
   mode=m;
   document.getElementById('btn-live').classList.toggle('active',m==='live');
@@ -1227,82 +1104,72 @@ function setMode(m){
 window.setMode=setMode;
 
 // ─── THEME ────────────────────────────────────────────────────
-var isDark = true;
+var dark=true;
 function toggleTheme(){
-  isDark = !isDark;
-  document.body.classList.toggle('light', !isDark);
-  document.getElementById('theme-btn').textContent = isDark ? '☀' : '☾';
+  dark=!dark; document.body.classList.toggle('light',!dark);
+  document.getElementById('theme-btn').textContent=dark?'☀':'☾';
 }
-window.toggleTheme = toggleTheme;
+window.toggleTheme=toggleTheme;
 
-// ─── PARTICLES with color by searched country ──────────────────
-var particles=[];
+// ─── TOOLTIP ──────────────────────────────────────────────────
 var tooltip=document.getElementById('pt-tooltip');
+function showTooltip(e,country){
+  var flag=FLAG_EMOJI[country]||''; var name=NAMES[country]||country;
+  tooltip.innerHTML=(flag?flag+' ':'')+'Searching: <strong>'+name+'</strong>';
+  tooltip.style.left=(e.clientX+14)+'px'; tooltip.style.top=(e.clientY-30)+'px';
+  tooltip.style.opacity='1';
+}
+function hideTooltip(){ tooltip.style.opacity='0'; }
+window.addEventListener('mousemove',function(e){
+  if(tooltip.style.opacity==='1'){ tooltip.style.left=(e.clientX+14)+'px'; tooltip.style.top=(e.clientY-30)+'px'; }
+});
 
-function spawnParticle(svgX,svgY,color,searchedCountry){
+// ─── PARTICLES ────────────────────────────────────────────────
+var particles=[];
+function spawnParticle(svgX,svgY,color,searched){
   var el=document.createElementNS('http://www.w3.org/2000/svg','circle');
-  el.setAttribute('cx',svgX.toFixed(1));
-  el.setAttribute('cy',svgY.toFixed(1));
-  el.setAttribute('r',(1.5+Math.random()*1.8).toFixed(2));
-  el.setAttribute('fill',color);
-  el.setAttribute('opacity','0');
-  el.style.cursor='crosshair';
-  // Tooltip on hover
-  el.addEventListener('mouseenter',function(e){
-    var name = NAMES[searchedCountry]||searchedCountry||'Unknown';
-    var flag = FLAG_EMOJI[searchedCountry]||'';
-    tooltip.innerHTML = flag+' Searching: <strong>'+name+'</strong>';
-    tooltip.style.left=(e.clientX+12)+'px';
-    tooltip.style.top=(e.clientY-28)+'px';
-    tooltip.style.opacity='1';
-  });
-  el.addEventListener('mouseleave',function(){tooltip.style.opacity='0';});
-  el.addEventListener('mousemove',function(e){
-    tooltip.style.left=(e.clientX+12)+'px';
-    tooltip.style.top=(e.clientY-28)+'px';
-  });
+  el.setAttribute('cx',svgX.toFixed(1)); el.setAttribute('cy',svgY.toFixed(1));
+  el.setAttribute('r',(1.4+Math.random()*1.6).toFixed(2));
+  el.setAttribute('fill',color); el.setAttribute('opacity','0');
+  el.addEventListener('mouseenter',function(e2){showTooltip(e2,searched);});
+  el.addEventListener('mouseleave',hideTooltip);
   partLayer.appendChild(el);
-  particles.push({el:el,age:0,fadeIn:90,hold:240+Math.random()*240,fadeOut:300});
+  particles.push({el:el,age:0,fadeIn:80,hold:220+Math.random()*200,fadeOut:280});
 }
 function tickParticles(){
   for(var i=particles.length-1;i>=0;i--){
-    var p=particles[i];p.age++;
+    var p=particles[i]; p.age++;
     var op;
-    if(p.age<p.fadeIn)op=p.age/p.fadeIn;
-    else if(p.age<p.fadeIn+p.hold)op=1;
-    else{var t=(p.age-p.fadeIn-p.hold)/p.fadeOut;if(t>=1){p.el.remove();particles.splice(i,1);continue;}op=1-t;}
-    p.el.setAttribute('opacity',(op*0.8).toFixed(2));
+    if(p.age<p.fadeIn) op=p.age/p.fadeIn;
+    else if(p.age<p.fadeIn+p.hold) op=1;
+    else { var t=(p.age-p.fadeIn-p.hold)/p.fadeOut; if(t>=1){p.el.remove();particles.splice(i,1);continue;} op=1-t; }
+    p.el.setAttribute('opacity',(op*0.82).toFixed(2));
   }
 }
 
 // ─── HEAT ─────────────────────────────────────────────────────
-var heatPoints=[];
+var heatPts=[];
 function addHeat(svgX,svgY,color){
-  if(heatPoints.length>=250){heatPoints.shift().el.remove();}
+  if(heatPts.length>=300) heatPts.shift().el.remove();
   var el=document.createElementNS('http://www.w3.org/2000/svg','circle');
-  el.setAttribute('cx',svgX.toFixed(1));el.setAttribute('cy',svgY.toFixed(1));
-  el.setAttribute('r',(5+Math.random()*5).toFixed(1));
-  el.setAttribute('fill',color);el.setAttribute('opacity','0');
+  el.setAttribute('cx',svgX.toFixed(1)); el.setAttribute('cy',svgY.toFixed(1));
+  el.setAttribute('r',(4+Math.random()*6).toFixed(1));
+  el.setAttribute('fill',color); el.setAttribute('opacity','0');
   el.setAttribute('filter','url(#heat-blur)');
   heatLayer.appendChild(el);
-  heatPoints.push({el:el,age:0,targetOp:0.025+Math.random()*0.02});
+  heatPts.push({el:el,age:0,max:0.022+Math.random()*0.018});
 }
-function tickHeat(){
-  for(var i=0;i<heatPoints.length;i++){
-    var p=heatPoints[i];
-    if(p.age<300){p.age++;p.el.setAttribute('opacity',(p.targetOp*p.age/300).toFixed(4));}
-  }
-}
+function tickHeat(){ heatPts.forEach(function(p){if(p.age<300){p.age++;p.el.setAttribute('opacity',(p.max*p.age/300).toFixed(4));}}); }
 
 // ─── GLOW ─────────────────────────────────────────────────────
 var glowId=null;
 function setGlow(id){
   if(glowId===id)return;
-  if(glowId){var prev=document.getElementById('path-'+glowId);if(prev){prev.style.stroke='';prev.style.filter='';prev.style.strokeWidth='';}}
-  glowId=id;if(!id)return;
-  var el=document.getElementById('path-'+id);if(!el)return;
+  if(glowId){var p=document.getElementById('path-'+glowId);if(p){p.style.stroke='';p.style.filter='';p.style.strokeWidth='';}}
+  glowId=id; if(!id)return;
+  var el=document.getElementById('path-'+id); if(!el)return;
   var col=COLORS[id]||'#fff';
-  el.style.stroke=col;el.style.filter='drop-shadow(0 0 3px '+col+')';el.style.strokeWidth='0.9';
+  el.style.stroke=col; el.style.filter='drop-shadow(0 0 3px '+col+')'; el.style.strokeWidth='0.8';
 }
 
 // ─── CLOCK ────────────────────────────────────────────────────
@@ -1313,165 +1180,186 @@ function updateClock(){
     String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
 }
 
-// ─── RANKING ──────────────────────────────────────────────────
-var interestMap={morocco:0,brazil:0,france:30,germany:20,usa:18,spain:16,england:22,argentina:25,japan:10,portugal:8};
-var NAMES={morocco:'Morocco',brazil:'Brazil',france:'France',germany:'Germany',usa:'USA',spain:'Spain',england:'England',argentina:'Argentina',japan:'Japan',portugal:'Portugal',southkorea:'South Korea',netherlands:'Netherlands',mexico:'Mexico',colombia:'Colombia',turkey:'Turkey',australia:'Australia',senegal:'Senegal',ghana:'Ghana',ivory:'Ivory Coast',southafrica:'S. Africa',algeria:'Algeria',egypt:'Egypt',uruguay:'Uruguay',ecuador:'Ecuador',czechia:'Czechia',czech:'Czech Rep.',canada:'Canada',croatia:'Croatia',switzerland:'Switzerland',italy:'Italy'};
+// ─── INTEREST MAP ─────────────────────────────────────────────
+var interestMap={brazil:0,morocco:0,france:30,germany:20,usa:18,spain:16,england:22,argentina:25,japan:10,portugal:8};
+var NAMES={
+  morocco:'Morocco',brazil:'Brazil',france:'France',germany:'Germany',
+  usa:'USA',spain:'Spain',england:'England',argentina:'Argentina',
+  japan:'Japan',portugal:'Portugal',southkorea:'South Korea',
+  netherlands:'Netherlands',mexico:'Mexico',colombia:'Colombia',
+  turkey:'Turkey',australia:'Australia',senegal:'Senegal',ghana:'Ghana',
+  ivory:'Ivory Coast',southafrica:'S. Africa',algeria:'Algeria',egypt:'Egypt',
+  uruguay:'Uruguay',ecuador:'Ecuador',czechia:'Czechia',czech:'Czech Rep.',
+  canada:'Canada',croatia:'Croatia',switzerland:'Switzerland',italy:'Italy',
+  serbia:'Serbia',austria:'Austria',norway:'Norway',sweden:'Sweden',
+  iran:'Iran',saudi:'Saudi Arabia',qatar:'Qatar',jordan:'Jordan',
+  uzbekistan:'Uzbekistan',haiti:'Haiti',curacao:'Curacao',caboverde:'Cape Verde',
+  scotland:'Scotland',panama:'Panama',paraguay:'Paraguay',newzealand:'New Zealand',
+  tunisia:'Tunisia',bosnia:'Bosnia',chile:'Chile'
+};
 
 function updateRanking(){
   var entries=Object.entries(interestMap).filter(function(e){return e[1]>0;}).sort(function(a,b){return b[1]-a[1];});
-  var top5=entries.slice(0,5),rest=entries.slice(5).reduce(function(s,e){return s+e[1];},0);
+  var top5=entries.slice(0,5), rest=entries.slice(5).reduce(function(s,e){return s+e[1];},0);
   var total=entries.reduce(function(s,e){return s+e[1];},0.01);
-  var container=document.getElementById('rank-rows');container.innerHTML='';
+  var c=document.getElementById('rank-rows'); c.innerHTML='';
   top5.forEach(function(entry,i){
-    var id=entry[0],val=entry[1];
-    var pct=Math.round((val/total)*100),col=COLORS[id]||'#888';
-    var row=document.createElement('div');row.className='rank-row';
-    row.innerHTML='<span class="rank-num">'+(i+1)+'</span><div class="rank-bar-wrap"><div class="rank-bar" style="width:'+pct+'%;background:'+col+'"></div></div><span class="rank-name">'+(NAMES[id]||id)+'</span><span class="rank-pct">'+pct+'%</span>';
-    container.appendChild(row);
+    var id=entry[0],val=entry[1],pct=Math.round(val/total*100),col=COLORS[id]||'#888';
+    var row=document.createElement('div'); row.className='rank-row';
+    row.innerHTML='<span class="rank-num">'+(i+1)+'</span>'+
+      '<div class="rank-bar-wrap"><div class="rank-bar" style="width:'+pct+'%;background:'+col+'"></div></div>'+
+      '<span class="rank-name">'+(NAMES[id]||id)+'</span><span class="rank-pct">'+pct+'%</span>';
+    c.appendChild(row);
   });
   if(rest>0){
-    var pct=Math.round((rest/total)*100);
-    var row=document.createElement('div');row.className='rank-row';
-    row.innerHTML='<span class="rank-num">+</span><div class="rank-bar-wrap"><div class="rank-bar" style="width:'+pct+'%;background:#333"></div></div><span class="rank-name" style="color:var(--muted)">Others</span><span class="rank-pct" style="color:var(--muted)">'+pct+'%</span>';
-    container.appendChild(row);
+    var pct=Math.round(rest/total*100);
+    var row=document.createElement('div'); row.className='rank-row';
+    row.innerHTML='<span class="rank-num">+</span>'+
+      '<div class="rank-bar-wrap"><div class="rank-bar" style="width:'+pct+'%;background:#444"></div></div>'+
+      '<span class="rank-name" style="color:var(--muted)">Others</span><span class="rank-pct" style="color:var(--muted)">'+pct+'%</span>';
+    c.appendChild(row);
   }
 }
 
 // ─── INSIGHT ──────────────────────────────────────────────────
 var itotals={};
 function updateInsight(){
-  var awayShare,homeShare;
-  if(usingRealData){awayShare=realAwayShare;homeShare=realHomeShare;}
-  else{var th=itotals[MATCH.home]||0,ta=itotals[MATCH.away]||0,tot=th+ta+0.01;awayShare=ta/tot;homeShare=th/tot;}
-  var pct=Math.round(awayShare*100);
+  if(!matchIsLive){ document.getElementById('insight-text').textContent=''; document.getElementById('chips').innerHTML=''; return; }
+  var total=Object.values(interestMap).reduce(function(s,v){return s+v;},0.01);
+  var hv=interestMap[MATCH.home]||0, av=interestMap[MATCH.away]||0;
+  var hp=Math.round(hv/total*100), ap=Math.round(av/total*100);
+  var top=Object.entries(interestMap).sort(function(a,b){return b[1]-a[1];})[0];
+  var pct=Math.round(av/(hv+av+0.01)*100);
   var txt;
-  if(pct>65)txt=pct+'% of searches are about '+MATCH.awayName;
-  else if(pct<35)txt=(100-pct)+'% of searches are about '+MATCH.homeName;
-  else txt='Balanced: '+MATCH.homeName+' and '+MATCH.awayName+' share global attention';
+  if(pct>65) txt=pct+'% of match searches are about '+MATCH.awayName;
+  else if(pct<35) txt=(100-pct)+'% of match searches are about '+MATCH.homeName;
+  else txt='Balanced interest: '+MATCH.homeName+' and '+MATCH.awayName;
   document.getElementById('insight-text').textContent=txt;
-  var chips=document.getElementById('chips');chips.innerHTML='';
+  var chips=document.getElementById('chips'); chips.innerHTML='';
   [[MATCH.home,MATCH.homeName,COLORS[MATCH.home]],[MATCH.away,MATCH.awayName,COLORS[MATCH.away]]].forEach(function(item){
-    var id=item[0],name=item[1],col=item[2];
-    if(!col)return;
-    var c=document.createElement('span');c.className='chip';
-    c.style.borderColor=col;c.style.color=col;c.textContent=name;chips.appendChild(c);
+    if(!item[2])return;
+    var c=document.createElement('span'); c.className='chip';
+    c.style.borderColor=item[2]; c.style.color=item[2]; c.textContent=item[1]; chips.appendChild(c);
   });
 }
 
-// ─── CHART ────────────────────────────────────────────────────
-var chartCtx,chartCanvas;
-var history={};
-var historyTimer=0;
+// ─── CHART — only during live match ───────────────────────────
+var chartCtx,chartCanvas,chartHistory={},histTimer=0;
 function setupChart(){
   chartCanvas=document.getElementById('chart-canvas');
   chartCtx=chartCanvas.getContext('2d');
   var cw=document.getElementById('chart-wrap');
-  chartCanvas.width=cw.clientWidth-44;chartCanvas.height=36;
+  chartCanvas.width=cw.clientWidth-44; chartCanvas.height=32;
 }
 function drawChart(){
-  if(!chartCtx)return;
+  if(!matchIsLive||!chartCtx)return;
   var w=chartCanvas.width,h=chartCanvas.height;
   chartCtx.clearRect(0,0,w,h);
-  var hh=history[MATCH.home]||[],ha=history[MATCH.away]||[];
-  if(!hh.length)return;
-  var maxLen=Math.max(hh.length,ha.length,2),maxVal=Math.max.apply(null,hh.concat(ha).concat([1]));
+  var hh=chartHistory[MATCH.home]||[], ha=chartHistory[MATCH.away]||[];
+  if(hh.length<2)return;
+  var maxLen=Math.max(hh.length,ha.length,2);
+  var maxVal=Math.max.apply(null,hh.concat(ha).concat([1]));
   function line(data,color){
-    if(!data.length)return;
-    chartCtx.strokeStyle=color;chartCtx.lineWidth=1.5;chartCtx.globalAlpha=0.85;
+    if(!data||data.length<2)return;
+    chartCtx.strokeStyle=color; chartCtx.lineWidth=1.5; chartCtx.globalAlpha=0.85;
     chartCtx.beginPath();
-    data.forEach(function(v,i){var x=(i/(maxLen-1))*w,y=h-(v/maxVal)*(h*0.85)-h*0.05;i===0?chartCtx.moveTo(x,y):chartCtx.lineTo(x,y);});
-    chartCtx.stroke();chartCtx.globalAlpha=1;
+    data.forEach(function(v,i){var x=(i/(maxLen-1))*w,y=h-(v/maxVal)*(h*0.82)-h*0.05;i===0?chartCtx.moveTo(x,y):chartCtx.lineTo(x,y);});
+    chartCtx.stroke(); chartCtx.globalAlpha=1;
   }
-  chartCtx.strokeStyle='rgba(128,128,128,0.1)';chartCtx.lineWidth=1;
-  chartCtx.beginPath();chartCtx.moveTo(0,h/2);chartCtx.lineTo(w,h/2);chartCtx.stroke();
-  line(hh,COLORS[MATCH.home]||'#f5d800');
-  line(ha,COLORS[MATCH.away]||'#c1272d');
+  chartCtx.strokeStyle='rgba(128,128,128,0.08)'; chartCtx.lineWidth=1;
+  chartCtx.beginPath(); chartCtx.moveTo(0,h/2); chartCtx.lineTo(w,h/2); chartCtx.stroke();
+  line(hh, COLORS[MATCH.home]||'#f5d800');
+  line(ha, COLORS[MATCH.away]||'#c1272d');
 }
 
 // ─── SIMULATION ───────────────────────────────────────────────
-var tick=0,awayBurst=0;
-var searchers=['brazil','france','spain','england','germany','usa','canada','portugal','netherlands','argentina','mexico','japan','colombia','southkorea','turkey','australia'];
+var tick=0, awayBurst=0;
+var searchers=['brazil','france','spain','england','germany','usa','canada','portugal','netherlands','argentina','mexico','japan','colombia','southkorea','turkey','australia','italy'];
+
+function getAwayShare(){
+  if(usingRealTrends){
+    var hv=realShares[MATCH.home]||0, av=realShares[MATCH.away]||0;
+    return av/(hv+av+0.01);
+  }
+  return 0.38+awayBurst*0.5;
+}
 
 function simulate(){
   tick++;
-  awayBurst=Math.max(0,awayBurst-0.004);
-  if(Math.random()<0.01)awayBurst=0.5+Math.random()*0.5;
-  var awayShare,homeShare;
-  if(usingRealData){awayShare=Math.max(0.05,Math.min(0.95,realAwayShare+(Math.random()-0.5)*0.04));homeShare=1-awayShare;}
-  else{awayShare=0.38+awayBurst*0.5;homeShare=1-awayShare;}
+  // Burst logic (only for simulation)
+  if(!usingRealTrends){ awayBurst=Math.max(0,awayBurst-0.004); if(Math.random()<0.01)awayBurst=0.5+Math.random()*0.5; }
+
+  var awayShare=getAwayShare(), homeShare=1-awayShare;
   if(!itotals[MATCH.home])itotals[MATCH.home]=0;
   if(!itotals[MATCH.away])itotals[MATCH.away]=0;
-  itotals[MATCH.home]+=homeShare*2;itotals[MATCH.away]+=awayShare*5;
-  if(!usingRealData){
-    interestMap[MATCH.away]=(itotals[MATCH.away]/(itotals[MATCH.home]+itotals[MATCH.away]+0.01))*100;
-    interestMap[MATCH.home]=(itotals[MATCH.home]/(itotals[MATCH.home]+itotals[MATCH.away]+0.01))*100;
-  }
-  historyTimer++;
-  if(historyTimer>=45){
-    historyTimer=0;
-    if(!history[MATCH.home])history[MATCH.home]=[];
-    if(!history[MATCH.away])history[MATCH.away]=[];
-    history[MATCH.home].push(homeShare*100);history[MATCH.away].push(awayShare*100);
-    if(history[MATCH.home].length>60)history[MATCH.home].shift();
-    if(history[MATCH.away].length>60)history[MATCH.away].shift();
-    if(currentGameData)updateGameTracking();
+  itotals[MATCH.home]+=homeShare*2; itotals[MATCH.away]+=awayShare*5;
+
+  if(!usingRealTrends){
+    var tot=itotals[MATCH.home]+itotals[MATCH.away]+0.01;
+    interestMap[MATCH.away]=itotals[MATCH.away]/tot*100;
+    interestMap[MATCH.home]=itotals[MATCH.home]/tot*100;
   }
 
-  // Spawn particles — color by searched country
+  // Chart history — only during live match
+  if(matchIsLive){
+    histTimer++;
+    if(histTimer>=45){
+      histTimer=0;
+      if(!chartHistory[MATCH.home])chartHistory[MATCH.home]=[];
+      if(!chartHistory[MATCH.away])chartHistory[MATCH.away]=[];
+      chartHistory[MATCH.home].push(homeShare*100);
+      chartHistory[MATCH.away].push(awayShare*100);
+      if(chartHistory[MATCH.home].length>60)chartHistory[MATCH.home].shift();
+      if(chartHistory[MATCH.away].length>60)chartHistory[MATCH.away].shift();
+      if(tracking)updateTracking();
+    }
+    updateClock();
+  }
+
+  // Particles — color = country being searched
   if(tick%3===0){
-    // Most particles come from home-country fans searching about away team
+    // Determine which country is most interesting to spawn
+    var topEntries=Object.entries(interestMap).sort(function(a,b){return b[1]-a[1];});
+    var topId=topEntries[0]?topEntries[0][0]:MATCH.away;
+    var topColor=COLORS[topId]||'#c1272d';
+
+    // Most particles: from home-country fans searching the away team
     var n=Math.random()<awayShare?2:1;
     for(var i=0;i<n;i++){
-      // Origin: home country or random other searcher
-      var src=Math.random()<0.45?MATCH.home:searchers[Math.floor(Math.random()*searchers.length)];
-      var pt=spawnPointForCountry(src);if(!pt)continue;
-      // Color = away team (what they're searching)
-      var col=COLORS[MATCH.away]||'#c1272d';
-      spawnParticle(pt[0],pt[1],col,MATCH.away);
+      var src=Math.random()<0.48?MATCH.home:searchers[Math.floor(Math.random()*searchers.length)];
+      var pt=spawnPoint(src); if(!pt)continue;
+      var searched=awayShare>homeShare?MATCH.away:MATCH.home;
+      var col=COLORS[searched]||'#c1272d';
+      spawnParticle(pt[0],pt[1],col,searched);
       addHeat(pt[0],pt[1],col);
     }
-    // Some particles from away fans searching home
-    if(Math.random()<homeShare*0.3){
-      var pt2=spawnPointForCountry(MATCH.away);
-      if(pt2){
-        var col2=COLORS[MATCH.home]||'#f5d800';
-        spawnParticle(pt2[0],pt2[1],col2,MATCH.home);
-        addHeat(pt2[0],pt2[1],col2);
-      }
-    }
-    // Occasional particles for other top-searched countries
-    if(Math.random()<0.15){
-      var topEntries=Object.entries(interestMap).sort(function(a,b){return b[1]-a[1];});
-      if(topEntries.length>2){
-        var randTop=topEntries[2+Math.floor(Math.random()*(Math.min(5,topEntries.length)-2))];
-        var rid=randTop[0];
-        var rpt=spawnPointForCountry(rid);
-        if(rpt){
-          var rcol=COLORS[rid]||'#888';
-          spawnParticle(rpt[0],rpt[1],rcol,rid);
-        }
-      }
+    // Some particles for other top countries
+    if(topEntries.length>2&&Math.random()<0.2){
+      var ri=2+Math.floor(Math.random()*Math.min(3,topEntries.length-2));
+      var rid=topEntries[ri][0];
+      var rpt=spawnPoint(rid);
+      if(rpt) spawnParticle(rpt[0],rpt[1],COLORS[rid]||'#888',rid);
     }
   }
 
   setGlow(awayShare>0.5?MATCH.away:MATCH.home);
-  if(tick%90===0&&!usingRealData){updateInsight();updateRanking();}
-  tickParticles();tickHeat();updateClock();
+  if(tick%90===0){ if(!usingRealTrends)updateInsight(); updateRanking(); }
+  tickParticles(); tickHeat();
 }
-function loop(){simulate();drawChart();requestAnimationFrame(loop);}
+
+function loop(){ simulate(); drawChart(); requestAnimationFrame(loop); }
 
 // ─── SQUAD ────────────────────────────────────────────────────
 function renderSquad(id){
   var sq=SQUADS[id],sec=document.getElementById('squad-section');
   if(!sq){sec.style.display='none';return;}
-  sec.style.display='block';
-  document.getElementById('c-coach').textContent=sq.coach;
-  function g(elId,pos,players){
+  sec.style.display='block'; document.getElementById('c-coach').textContent=sq.coach;
+  function g(elId,pos,arr){
     var el=document.getElementById(elId);el.innerHTML='';
-    if(!players||!players.length)return;
+    if(!arr||!arr.length)return;
     var lbl=document.createElement('div');lbl.className='squad-pos';lbl.textContent=pos;el.appendChild(lbl);
     var wrap=document.createElement('div');wrap.className='squad-players';
-    players.forEach(function(p){var t=document.createElement('span');t.className='player-tag';t.textContent=p;wrap.appendChild(t);});
+    arr.forEach(function(p){var t=document.createElement('span');t.className='player-tag';t.textContent=p;wrap.appendChild(t);});
     el.appendChild(wrap);
   }
   g('squad-gk','Goalkeepers',sq.gk);g('squad-df','Defenders',sq.df);
@@ -1498,32 +1386,30 @@ function openCountry(id){
   var bar=document.getElementById('i-bar');bar.style.background=col;
   bar.style.width='0%';setTimeout(function(){bar.style.width=d.interest+'%';},80);
   document.getElementById('i-note').textContent='Estimated global interest: '+d.interest+'/100';
-  renderSquad(id);
-  document.getElementById('sidebar').classList.add('open');
+  renderSquad(id); document.getElementById('sidebar').classList.add('open');
 }
 function closeSidebar(){
   document.getElementById('sidebar').classList.remove('open');
   document.querySelectorAll('.participating').forEach(function(e){e.classList.remove('active');});
 }
 window.closeSidebar=closeSidebar;
-
 mapWrap.addEventListener('click',function(e){
-  if(dragMovedPx>5)return;
+  if(dMoved>5)return;
   var el=document.elementFromPoint(e.clientX,e.clientY);
-  var countryEl=el&&el.closest('[data-country]');
-  if(countryEl)openCountry(countryEl.dataset.country);
-  else closeSidebar();
+  var ce=el&&el.closest('[data-country]');
+  if(ce)openCountry(ce.dataset.country); else closeSidebar();
 });
 
 window.addEventListener('resize',function(){
   var cw=document.getElementById('chart-wrap');
-  if(cw&&chartCanvas){chartCanvas.width=cw.clientWidth-44;chartCanvas.height=36;}
+  if(cw&&chartCanvas){chartCanvas.width=cw.clientWidth-44;chartCanvas.height=32;}
 });
 
 window.addEventListener('load',function(){
-  setupChart();updateInsight();updateRanking();updateMatchBar();
+  setupChart(); updateRanking(); updateMatchBar();
   fetchLiveData();
-  setInterval(fetchLiveData,60000);
+  setInterval(fetchMatch,60000);
+  setInterval(function(){ fetchTrends(MATCH.home,MATCH.away); },300000);
   loop();
 });
 
