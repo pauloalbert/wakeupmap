@@ -1,34 +1,36 @@
 import json
-import time
-import sys
 import os
-from http.server import BaseHTTPRequestHandler
+import urllib.request
+from datetime import datetime, timezone
 
-sys.path.insert(0, os.path.dirname(__file__))
-import match as match_module
-import trends as trends_module
-
-_cache = {'data': None, 'ts': 0}
-CACHE_SECONDS = 60
-
-class app(BaseHTTPRequestHandler):
-    def do_GET(self):
-        global _cache
-        now = time.time()
-        if _cache['data'] and (now - _cache['ts']) < CACHE_SECONDS:
-            result = _cache['data']
-        else:
-            match_data = match_module.get_live_match()
-            home = (match_data or {}).get('home', 'brazil')
-            away = (match_data or {}).get('away', 'morocco')
-            trends_data = trends_module.get_trends(home, away)
-            result = {'match': match_data, 'trends': trends_data, 'ts': int(now)}
-            _cache = {'data': result, 'ts': now}
-
-        body = json.dumps(result).encode()
-        self.send_response(200)
-        self.send_header('Content-Type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Cache-Control', 'public, max-age=60')
-        self.end_headers()
-        self.wfile.write(body)
+def handler(request):
+    api_key = os.environ.get('FOOTBALL_API_KEY', '')
+    result = {'match': None, 'trends': {}, 'ts': 0}
+    
+    if api_key:
+        try:
+            today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+            url = f'https://api.football-data.org/v4/competitions/2000/matches?dateFrom={today}&dateTo={today}&status=LIVE'
+            req = urllib.request.Request(url, headers={'X-Auth-Token': api_key})
+            with urllib.request.urlopen(req, timeout=5) as r:
+                data = json.loads(r.read())
+            matches = data.get('matches', [])
+            if matches:
+                m = matches[0]
+                hs = (m.get('score',{}).get('fullTime',{}).get('home') or 0)
+                as_ = (m.get('score',{}).get('fullTime',{}).get('away') or 0)
+                result['match'] = {
+                    'homeName': m['homeTeam']['name'],
+                    'awayName': m['awayTeam']['name'],
+                    'score': f"{hs} — {as_}",
+                    'minute': m.get('minute', 0),
+                    'status': m.get('status', 'TIMED')
+                }
+        except Exception as e:
+            result['error'] = str(e)
+    
+    return {
+        'status': 200,
+        'headers': {'Content-Type': 'application/json'},
+        'body': json.dumps(result)
+    }
